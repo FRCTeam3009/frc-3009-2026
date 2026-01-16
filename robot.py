@@ -9,8 +9,7 @@ import wpilib
 import commands2
 import typing
 import ntcore
-
-from robotcontainer import RobotContainer
+import robotcontainer
 
 class MyRobot(commands2.TimedCommandRobot):
     """
@@ -28,7 +27,8 @@ class MyRobot(commands2.TimedCommandRobot):
 
         # Instantiate our RobotContainer.  This will perform all our button bindings, and put our
         # autonomous chooser on the dashboard.
-        self.container = RobotContainer()
+
+        self.container = robotcontainer.RobotContainer()
 
         self.consoleTimer = wpilib.Timer()
         self.consoleTimer.start()
@@ -77,7 +77,6 @@ class MyRobot(commands2.TimedCommandRobot):
 
         self.container.telemetry()
 
-        self.container.elevator.sim_update()
 
         self.container.auto_dashboard.update()
 
