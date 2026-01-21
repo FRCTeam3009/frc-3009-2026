@@ -15,13 +15,9 @@ components = [
     "apriltag",
     "commands2",
     "cscore",
-    "navx",
-    "pathplannerlib",
-    "rev",
     "romi",
     "sim",
     "xrp",
-    "phoenix5",
 ]
 
 # Other pip packages to install, such as vendor packages (each element
@@ -29,4 +25,5 @@ components = [
 requires = [
     "numpy",
     "phoenix6",
+    "robotpy-pathplannerlib",
 ]
