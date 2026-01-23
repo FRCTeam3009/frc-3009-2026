@@ -10,7 +10,6 @@ import commands2.cmd
 from commands2.sysid import SysIdRoutine
 
 from generated.tuner_constants import TunerConstants
-import subsystems.controller
 import subsystems.drive_robot_relative
 import telemetry
 import wpilib
@@ -21,6 +20,7 @@ from phoenix6 import swerve
 from wpimath.units import rotationsToRadians
 import subsystems.limelight
 import automodes
+import subsystems.shooter
 
 
 class RobotContainer:
@@ -63,7 +63,7 @@ class RobotContainer:
 
         self._driver_joystick = commands2.button.CommandXboxController(0)
 
-        self._operator_joystick = subsystems.controller.Controller(1)
+        self._operator_joystick = commands2.button.CommandXboxController(1)
 
         self.drivetrain = TunerConstants.create_drivetrain()
 
@@ -84,6 +84,8 @@ class RobotContainer:
         self.periodic_publish.set(0.0)
 
         self.speed_limit = subsystems.drive_robot_relative.NORMAL_SPEED
+
+        self.shooter = subsystems.shooter.Shooter()
 
         # Configure the button bindings
         self.configureButtonBindings()
@@ -218,6 +220,10 @@ class RobotContainer:
         self._driver_joystick.b().whileTrue(
             subsystems.drive_robot_relative.drive_forward_command(self.drivetrain, subsystems.drive_robot_relative.FORWARD_OFFSET, self.speed_limit)
        )
+        
+        self._operator_joystick.rightTrigger().whileTrue(
+            self.shooter.shoot_command(0.5)
+        )
 
 
     

@@ -26,4 +26,5 @@ requires = [
     "numpy",
     "phoenix6",
     "robotpy-pathplannerlib",
+    "robotpy-rev",
 ]
