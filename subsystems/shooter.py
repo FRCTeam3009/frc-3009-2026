@@ -23,6 +23,7 @@ class FireCommand(commands2.Command):
         self.speed = speed
 
     def execute(self):
+        print("penguins")
         self.shooter.move(self.speed())
 
     def end(self, interrupted):

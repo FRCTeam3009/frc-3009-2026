@@ -221,7 +221,7 @@ class RobotContainer:
        )
         
         self._operator_joystick.rightTrigger().whileTrue(
-            subsystems.shooter.FireCommand(self.shooter, lambda: self._operator_joystick.getRightTriggerAxis)
+            subsystems.shooter.FireCommand(self.shooter, lambda: -1 * self._operator_joystick.getRightTriggerAxis())
         )
 
     
