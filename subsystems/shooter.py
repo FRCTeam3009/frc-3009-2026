@@ -14,7 +14,16 @@ class Shooter(commands2.Subsystem):
         self.motor_sim.setPosition(self.motor_sim.getPosition() + speed * 2)
         self.motor_sim.getAbsoluteEncoderSim().setPosition(self.motor_sim.getPosition() + speed * 2)
 
-    def shoot_command(self, speed: float) -> commands2.Command:
-        return lambda: (
-            self.move(speed)
-        )
+class FireCommand(commands2.Subsystem):
+    def __init__(self, shooter: Shooter):
+        return
+    
+
+
+
+
+
+    #TODO shooter command
+    #TODO very basic auto shoots drives
+    #TODO Network table dashboard configure values dynamically (shooter speed)
+    #TODO add climber

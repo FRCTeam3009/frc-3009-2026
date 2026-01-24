@@ -213,7 +213,6 @@ class RobotContainer:
         self._driver_joystick.leftBumper().onTrue(
             self.drivetrain.runOnce(lambda: self.drivetrain.seed_field_centric())
         )
-
         self.drivetrain.register_telemetry(
             lambda state: self._logger.telemeterize(state)
         )
@@ -221,10 +220,9 @@ class RobotContainer:
             subsystems.drive_robot_relative.drive_forward_command(self.drivetrain, subsystems.drive_robot_relative.FORWARD_OFFSET, self.speed_limit)
        )
         
-        self._operator_joystick.rightTrigger().whileTrue(
-            self.shooter.shoot_command(0.5)
-        )
-
+        '''self._operator_joystick.rightTrigger().whileTrue(
+            
+        )'''
 
     
     def getAutonomousCommand(self) -> commands2.Command:
