@@ -220,9 +220,9 @@ class RobotContainer:
             subsystems.drive_robot_relative.drive_forward_command(self.drivetrain, subsystems.drive_robot_relative.FORWARD_OFFSET, self.speed_limit)
        )
         
-        '''self._operator_joystick.rightTrigger().whileTrue(
-            
-        )'''
+        self._operator_joystick.rightTrigger().whileTrue(
+            subsystems.shooter.FireCommand(self.shooter, lambda: self._operator_joystick.getRightTriggerAxis)
+        )
 
     
     def getAutonomousCommand(self) -> commands2.Command:
