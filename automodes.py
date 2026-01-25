@@ -10,6 +10,7 @@ import ntcore
 import wpilib
 import commands2
 import subsystems.limelight_positions
+import subsystems.shooter
 from phoenix6 import swerve
 from wpimath.geometry import Rotation2d, Pose2d
 
@@ -42,7 +43,14 @@ positions[26] = Pose2d(5.00, 2.85, Rotation2d.fromDegrees(120)) #blue right
 positions[27] = Pose2d(12.55, 2.82, Rotation2d.fromDegrees(60)) #red left
 positions[28] = Pose2d(12.57, 5.24, Rotation2d.fromDegrees(-60)) #red right
 
-
+class AutoCommand():
+    drive_to_pose = 1
+    drive_shoot = 2
+    wait = 3
+    def __init__(self, position : Pose2d, type : int, aprtag: int):
+        self.position = position
+        self.type = type
+        self.april_tag_id = aprtag
 
 def pathplanner_constraints(): 
     # Create the constraints to use while pathfinding
@@ -66,6 +74,45 @@ def sit(drivetrain: subsystems.command_swerve_drivetrain.CommandSwerveDrivetrain
                      ) -> commands2.Command:
     
     return commands2.Command()
+
+def move_shoot(drivetrain: subsystems.command_swerve_drivetrain.CommandSwerveDrivetrain, 
+                     front_limelight: subsystems.limelight.Limelight, 
+                     back_limelight: subsystems.limelight.Limelight,
+                     shooter: subsystems.shooter.Shooter
+                     ) -> commands2.Command:
+    approx_start = Pose2d(0, 0, 0)
+    auto_commands = [AutoCommand(positions[1], AutoCommand.drive_shoot, 21), 
+                     AutoCommand(positions[1], AutoCommand.wait, 21),
+                     ]
+    return get_auto_command(drivetrain, front_limelight, back_limelight, approx_start, auto_commands, shooter)
+
+def get_auto_command(drivetrain: subsystems.command_swerve_drivetrain.CommandSwerveDrivetrain, 
+                     front_limelight: subsystems.limelight.Limelight, 
+                     back_limelight: subsystems.limelight.Limelight,
+                     approx_start: Pose2d,
+                     auto_commands: list[AutoCommand],
+                     shooter: subsystems.shooter.Shooter
+                     ) -> commands2.Command:
+    
+    # Assume we start on the black line, but ultimately we don't care where we start.
+    
+    drivetrain.reset_pose(approx_start)
+
+    cmds = commands2.SequentialCommandGroup()
+
+    for command in auto_commands:
+        if command.type == AutoCommand.wait:
+            cmds.addCommands(WaitCommand(drivetrain))
+        elif command.type == AutoCommand.drive_to_pose:
+            cmds.addCommands(drive_to_pose(command))
+    return cmds
+
+def drive_to_pose(cmd : AutoCommand):
+    return pathplannerlib.auto.AutoBuilder.pathfindToPose(
+            cmd.position,
+            pathplanner_constraints(),
+            0.0,
+        )
 
 class AutoDashboard():
     auto_map = {
