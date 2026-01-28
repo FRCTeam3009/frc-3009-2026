@@ -3,12 +3,19 @@ import rev
 import wpimath
 import wpimath.system.plant
 import typing
+import ntcore
 
 class Shooter(commands2.Subsystem):
     def __init__(self):
         commands2.CommandScheduler.registerSubsystem(self)
         self.motor = rev.SparkMax(4, rev.SparkLowLevel.MotorType.kBrushless)
         self.motor_sim = rev.SparkSim(self.motor, wpimath.system.plant.DCMotor.NEO(1))
+
+        self.ntcore_instance = ntcore.NetworkTableInstance.getDefault()
+        self.commands = self.ntcore_instance.getTable("commands")
+        self.command_topic = self.commands.getFloatTopic("Shooter")
+        self.command_publish = self.command_topic.publish()
+        self.command_publish.set(0.0)
     
     def move(self, speed: float):
         self.motor.set(speed)

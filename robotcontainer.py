@@ -21,6 +21,7 @@ from wpimath.units import rotationsToRadians
 import subsystems.limelight
 import automodes
 import subsystems.shooter
+import subsystems.climber
 
 
 class RobotContainer:
@@ -86,6 +87,8 @@ class RobotContainer:
         self.speed_limit = subsystems.drive_robot_relative.NORMAL_SPEED
 
         self.shooter = subsystems.shooter.Shooter()
+
+        self.climber = subsystems.climber.Climber()
 
         # Configure the button bindings
         self.configureButtonBindings()
@@ -222,6 +225,14 @@ class RobotContainer:
         
         self._operator_joystick.rightTrigger().whileTrue(
             subsystems.shooter.FireCommand(self.shooter, lambda: -1 * self._operator_joystick.getRightTriggerAxis())
+        )
+        self._operator_joystick.povUp().whileTrue(
+            subsystems.climber.MoveClimberCommand(self.climber, 1)
+            #change speed later
+        )
+        self._operator_joystick.povDown().whileTrue(
+            subsystems.climber.MoveClimberCommand(self.climber, -1)
+            #change speed later
         )
 
     
