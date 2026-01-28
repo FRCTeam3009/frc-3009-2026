@@ -114,6 +114,14 @@ def drive_to_pose(cmd : AutoCommand):
             0.0,
         )
 
+def shoot_fuel(shooter: subsystems.shooter.Shooter):
+    
+    cmds = commands2.SequentialCommandGroup()
+    fire = subsystems.shooter.Shooter.move(shooter)
+    cmds.addCommands(fire)
+
+    return cmds
+
 class AutoDashboard():
     auto_map = {
         "noob_forward": noob_auto_drive_straight_forward,  
@@ -162,3 +170,7 @@ class WaitCommand(commands2.Command):
             return True
         return False
     
+    def shoot(shooter : subsystems.shooter.Shooter):
+        cmds = commands2.SequentialCommandGroup()
+        cmds.addCommands(shoot_fuel(shooter))
+        return cmds

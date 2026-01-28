@@ -34,7 +34,7 @@ class FireCommand(commands2.Command):
 
 
 
-    #TODO shooter command
-    #TODO very basic auto shoots drives
+    #TODO shooter command (seems to work don't have network tables yet so can't test fully)
+    #TODO very basic auto shoots drives (add in drive the auto only shoots right now)
     #TODO Network table dashboard configure values dynamically (shooter speed)
     #TODO add climber
