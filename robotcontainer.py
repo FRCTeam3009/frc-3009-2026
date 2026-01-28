@@ -22,6 +22,7 @@ import subsystems.limelight
 import automodes
 import subsystems.shooter
 import subsystems.sweeper
+import subsystems.climber
 
 
 class RobotContainer:
@@ -88,6 +89,7 @@ class RobotContainer:
 
         self.shooter = subsystems.shooter.Shooter()
         self.sweeper = subsystems.sweeper.Sweeper()
+        self.climber = subsystems.climber.Climber()
 
         # Configure the button bindings
         self.configureButtonBindings()
@@ -224,6 +226,14 @@ class RobotContainer:
         
         self._operator_joystick.rightTrigger().whileTrue(
             subsystems.shooter.FireCommand(self.shooter, lambda: -1 * self._operator_joystick.getRightTriggerAxis())
+        )
+        self._operator_joystick.povUp().whileTrue(
+            subsystems.climber.MoveClimberCommand(self.climber, 1)
+            #change speed later
+        )
+        self._operator_joystick.povDown().whileTrue(
+            subsystems.climber.MoveClimberCommand(self.climber, -1)
+            #change speed later
         )
 
         self._operator_joystick.a().onTrue(
