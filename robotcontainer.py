@@ -21,6 +21,7 @@ from wpimath.units import rotationsToRadians
 import subsystems.limelight
 import automodes
 import subsystems.shooter
+import subsystems.sweeper
 
 
 class RobotContainer:
@@ -86,6 +87,7 @@ class RobotContainer:
         self.speed_limit = subsystems.drive_robot_relative.NORMAL_SPEED
 
         self.shooter = subsystems.shooter.Shooter()
+        self.sweeper = subsystems.sweeper.Sweeper()
 
         # Configure the button bindings
         self.configureButtonBindings()
@@ -222,6 +224,14 @@ class RobotContainer:
         
         self._operator_joystick.rightTrigger().whileTrue(
             subsystems.shooter.FireCommand(self.shooter, lambda: -1 * self._operator_joystick.getRightTriggerAxis())
+        )
+
+        self._operator_joystick.a().onTrue(
+            self.sweeper.HorizontalCmd()
+        )
+
+        self._operator_joystick.b().onTrue(
+            self.sweeper.VerticalCmd()
         )
 
     
