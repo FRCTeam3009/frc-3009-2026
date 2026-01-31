@@ -3,15 +3,14 @@ import wpimath.system.plant
 import commands2
 import ntcore
 import wpilib
-from generated.tuner_constants import TunerConstants
+import can_ids
 
 SPEED = 1.0
 
 class Climber(commands2.Subsystem):
     def __init__(self):
         commands2.CommandScheduler.registerSubsystem(self)
-        # set correct id
-        self.climber_motor = rev.SparkMax(24, rev.SparkLowLevel.MotorType.kBrushless)
+        self.climber_motor = rev.SparkMax(can_ids.climber, rev.SparkLowLevel.MotorType.kBrushless)
         self.climber_motor_sim = rev.SparkMaxSim(self.climber_motor, wpimath.system.plant.DCMotor.NEO(1))
 
         #add limits
@@ -40,6 +39,9 @@ class Climber(commands2.Subsystem):
             self.climber_motor.getAbsoluteEncoder().getPosition(),
             ]
         self.motor_publish.set(positions)
+
+    def move_cmd(self, speed: float):
+        return MoveClimberCommand(self, speed)
 
 class MoveClimberCommand(commands2.Command):
     def __init__(self, climber: Climber, speed: float):

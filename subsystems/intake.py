@@ -1,7 +1,7 @@
 import wpilib
 import commands2
 
-class Sweeper(commands2.Subsystem):
+class Intake(commands2.Subsystem):
     def __init__(self):
         self.HorizontalMotion = wpilib.DoubleSolenoid(wpilib.PneumaticsModuleType.CTREPCM, 0, 1)
         self.VerticalMotion = wpilib.DoubleSolenoid(wpilib.PneumaticsModuleType.CTREPCM, 2, 3)
@@ -15,29 +15,29 @@ class Sweeper(commands2.Subsystem):
         self.HorizontalMotion.toggle()
 
     def HorizontalCmd(self):
-        return SweeperHorizontalCommand(self)
+        return IntakeHorizontalCommand(self)
     
     def VerticalCmd(self):
-        return SweeperVerticalCommand(self)
+        return IntakeVerticalCommand(self)
 
-class SweeperHorizontalCommand(commands2.Command):
-    def __init__(self, sweeper: Sweeper):
-        self.addRequirements(sweeper)
-        self.sweeper = sweeper
+class IntakeHorizontalCommand(commands2.Command):
+    def __init__(self, intake: Intake):
+        self.addRequirements(intake)
+        self.intake = intake
 
     def execute(self):
-        self.sweeper.Horizontal()
+        self.intake.Horizontal()
 
     def isFinished(self):
         return True
 
-class SweeperVerticalCommand(commands2.Command):
-    def __init__(self, sweeper: Sweeper):
-        self.addRequirements(sweeper)
-        self.sweeper = sweeper
+class IntakeVerticalCommand(commands2.Command):
+    def __init__(self, intake: Intake):
+        self.addRequirements(intake)
+        self.intake = intake
 
     def execute(self):
-        self.sweeper.Vertical()
+        self.intake.Vertical()
 
     def isFinished(self):
         return True

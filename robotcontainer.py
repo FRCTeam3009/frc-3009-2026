@@ -21,7 +21,7 @@ from wpimath.units import rotationsToRadians
 import subsystems.limelight
 import automodes
 import subsystems.shooter
-import subsystems.sweeper
+import subsystems.intake
 import subsystems.climber
 
 
@@ -61,11 +61,10 @@ class RobotContainer:
             )
         )
 
-        self._logger = telemetry.Telemetry(self._max_speed)
+        self.logger = telemetry.Telemetry(self._max_speed)
 
-        self._driver_joystick = commands2.button.CommandXboxController(0)
-
-        self._operator_joystick = commands2.button.CommandXboxController(1)
+        self.driver_controller = commands2.button.CommandXboxController(0)
+        self.operator_controller = commands2.button.CommandXboxController(1)
 
         self.drivetrain = TunerConstants.create_drivetrain()
 
@@ -88,11 +87,11 @@ class RobotContainer:
         self.speed_limit = subsystems.drive_robot_relative.NORMAL_SPEED
 
         self.shooter = subsystems.shooter.Shooter()
-        self.sweeper = subsystems.sweeper.Sweeper()
+        self.intake = subsystems.intake.Intake()
         self.climber = subsystems.climber.Climber()
 
         # Configure the button bindings
-        self.configureButtonBindings()
+        self.configure_button_bindings()
         
         self.front_limelight.update_command().schedule()
         self.back_limelight.update_command().schedule()
@@ -104,155 +103,167 @@ class RobotContainer:
     def set_normal_speed(self):
         self.speed_limit = subsystems.drive_robot_relative.NORMAL_SPEED
 
-    def configureButtonBindings(self) -> None:
+    def configure_button_bindings(self) -> None:
         """
         Use this method to define your button->command mappings. Buttons can be created by
         instantiating a :GenericHID or one of its subclasses (Joystick or XboxController),
         and then passing it to a JoystickButton.
         """
-        self._driver_joystick.rightTrigger().whileTrue(
+        self.driver_controller.rightTrigger().whileTrue(
             commands2.cmd.run(self.set_turbo_speed).finallyDo(lambda interrupted: self.set_normal_speed())
         )
 
         # Note that X is defined as forward according to WPILib convention,
         # and Y is defined as to the left according to WPILib convention.
+        #
+        #         X
+        #         ^
+        #         |
+        #    Y <--*
+        #
         self.drivetrain.setDefaultCommand(
             # Drivetrain will execute this command periodically
             self.drivetrain.apply_request(
                 lambda: (
                     self._drive.with_velocity_x(
-                        -self._driver_joystick.getLeftY() * self._max_speed * self.speed_limit
+                        -self.driver_controller.getLeftY() * self._max_speed * self.speed_limit
                     )  # Drive forward with negative Y (forward)
                     .with_velocity_y(
-                        -self._driver_joystick.getLeftX() * self._max_speed * self.speed_limit
+                        -self.driver_controller.getLeftX() * self._max_speed * self.speed_limit
                     )  # Drive left with negative X (left)
                     .with_rotational_rate(
-                        -self._driver_joystick.getRightX() * self._max_angular_rate * self.speed_limit
+                        -self.driver_controller.getRightX() * self._max_angular_rate * self.speed_limit
                     )  # Drive counterclockwise with negative X (left)
                 )
             )
         )
 
-        self._driver_joystick.povUp().whileTrue(
+        self.driver_controller.povUp().whileTrue(
             self.drivetrain.apply_request(
                 lambda: self._forward_straight
                 .with_velocity_x(subsystems.drive_robot_relative.NORMAL_SPEED)
                 .with_velocity_y(0)
-                .with_rotational_rate(-self._driver_joystick.getRightX() * self._max_angular_rate / 2)
+                .with_rotational_rate(-self.driver_controller.getRightX() * self._max_angular_rate / 2)
             )
         )
-        self._driver_joystick.povDown().whileTrue(
+        self.driver_controller.povDown().whileTrue(
             self.drivetrain.apply_request(
                 lambda: self._forward_straight
                 .with_velocity_x(-subsystems.drive_robot_relative.NORMAL_SPEED)
                 .with_velocity_y(0)
-                .with_rotational_rate(-self._driver_joystick.getRightX() * self._max_angular_rate / 2)
+                .with_rotational_rate(-self.driver_controller.getRightX() * self._max_angular_rate / 2)
             )
         )
-        self._driver_joystick.povRight().whileTrue(
+        self.driver_controller.povRight().whileTrue(
             self.drivetrain.apply_request(
                 lambda: self._forward_straight
                 .with_velocity_x(0.0)
                 .with_velocity_y(-subsystems.drive_robot_relative.NORMAL_SPEED)
-                .with_rotational_rate(-self._driver_joystick.getRightX() * self._max_angular_rate / 2)
+                .with_rotational_rate(-self.driver_controller.getRightX() * self._max_angular_rate / 2)
             )
         )
-        self._driver_joystick.povLeft().whileTrue(
+        self.driver_controller.povLeft().whileTrue(
             self.drivetrain.apply_request(
                 lambda: self._forward_straight
                 .with_velocity_x(0.0)
                 .with_velocity_y(subsystems.drive_robot_relative.NORMAL_SPEED)
-                .with_rotational_rate(-self._driver_joystick.getRightX() * self._max_angular_rate / 2)
+                .with_rotational_rate(-self.driver_controller.getRightX() * self._max_angular_rate / 2)
             )
         )
-        self._driver_joystick.povUpRight().whileTrue(
+        self.driver_controller.povUpRight().whileTrue(
             self.drivetrain.apply_request(
                 lambda: self._forward_straight
                 .with_velocity_x(subsystems.drive_robot_relative.NORMAL_SPEED)
                 .with_velocity_y(-subsystems.drive_robot_relative.NORMAL_SPEED)
-                .with_rotational_rate(-self._driver_joystick.getRightX() * self._max_angular_rate / 2)
+                .with_rotational_rate(-self.driver_controller.getRightX() * self._max_angular_rate / 2)
             )
         )
-        self._driver_joystick.povDownRight().whileTrue(
+        self.driver_controller.povDownRight().whileTrue(
             self.drivetrain.apply_request(
                 lambda: self._forward_straight
                 .with_velocity_x(-subsystems.drive_robot_relative.NORMAL_SPEED)
                 .with_velocity_y(-subsystems.drive_robot_relative.NORMAL_SPEED)
-                .with_rotational_rate(-self._driver_joystick.getRightX() * self._max_angular_rate / 2)
+                .with_rotational_rate(-self.driver_controller.getRightX() * self._max_angular_rate / 2)
             )
         )
-        self._driver_joystick.povDownLeft().whileTrue(
+        self.driver_controller.povDownLeft().whileTrue(
             self.drivetrain.apply_request(
                 lambda: self._forward_straight
                 .with_velocity_x(-subsystems.drive_robot_relative.NORMAL_SPEED)
                 .with_velocity_y(subsystems.drive_robot_relative.NORMAL_SPEED)
-                .with_rotational_rate(-self._driver_joystick.getRightX() * self._max_angular_rate / 2)
+                .with_rotational_rate(-self.driver_controller.getRightX() * self._max_angular_rate / 2)
             )
         )
-        self._driver_joystick.povUpLeft().whileTrue(
+        self.driver_controller.povUpLeft().whileTrue(
             self.drivetrain.apply_request(
                 lambda: self._forward_straight
                 .with_velocity_x(subsystems.drive_robot_relative.NORMAL_SPEED)
                 .with_velocity_y(subsystems.drive_robot_relative.NORMAL_SPEED)
-                .with_rotational_rate(-self._driver_joystick.getRightX() * self._max_angular_rate / 2)
+                .with_rotational_rate(-self.driver_controller.getRightX() * self._max_angular_rate / 2)
             )
         )
 
         # Run SysId routines when holding back/start and X/Y.
         # Note that each routine should be run exactly once in a single log.
-        (self._driver_joystick.back() & self._driver_joystick.y()).whileTrue(
+        (self.driver_controller.back() & self.driver_controller.y()).whileTrue(
             self.drivetrain.sys_id_dynamic(SysIdRoutine.Direction.kForward)
         )
-        (self._driver_joystick.back() & self._driver_joystick.x()).whileTrue(
+        (self.driver_controller.back() & self.driver_controller.x()).whileTrue(
             self.drivetrain.sys_id_dynamic(SysIdRoutine.Direction.kReverse)
         )
-        (self._driver_joystick.start() & self._driver_joystick.y()).whileTrue(
+        (self.driver_controller.start() & self.driver_controller.y()).whileTrue(
             self.drivetrain.sys_id_quasistatic(SysIdRoutine.Direction.kForward)
         )
-        (self._driver_joystick.start() & self._driver_joystick.x()).whileTrue(
+        (self.driver_controller.start() & self.driver_controller.x()).whileTrue(
             self.drivetrain.sys_id_quasistatic(SysIdRoutine.Direction.kReverse)
         )
 
         # reset the field-centric heading on left bumper press
-        self._driver_joystick.leftBumper().onTrue(
-            self.drivetrain.runOnce(lambda: self.drivetrain.seed_field_centric())
+        def field_centric():
+            return self.drivetrain.seed_field_centric()
+        self.driver_controller.leftBumper().onTrue(
+            self.drivetrain.runOnce(field_centric)
         )
-        self.drivetrain.register_telemetry(
-            lambda state: self._logger.telemeterize(state)
-        )
-        self._driver_joystick.b().whileTrue(
+
+        def telemetry_func(state):
+            return self.logger.telemeterize(state)
+        self.drivetrain.register_telemetry(telemetry_func)
+
+        self.driver_controller.b().whileTrue(
             subsystems.drive_robot_relative.drive_forward_command(self.drivetrain, subsystems.drive_robot_relative.FORWARD_OFFSET, self.speed_limit)
-       )
+        )
         
-        self._operator_joystick.rightTrigger().whileTrue(
-            subsystems.shooter.FireCommand(self.shooter, lambda: -1 * self._operator_joystick.getRightTriggerAxis())
-        )
-        self._operator_joystick.povUp().whileTrue(
-            subsystems.climber.MoveClimberCommand(self.climber, 1)
-            #change speed later
-        )
-        self._operator_joystick.povDown().whileTrue(
-            subsystems.climber.MoveClimberCommand(self.climber, -1)
-            #change speed later
+        def shoot_speed():
+            return -1 * self.operator_controller.getRightTriggerAxis()
+        self.operator_controller.rightTrigger().whileTrue(
+            self.shooter.fire_cmd(shoot_speed)
         )
 
-        self._operator_joystick.a().onTrue(
-            self.sweeper.HorizontalCmd()
+        climber_speed = 0.5
+        self.operator_controller.povUp().whileTrue(
+            self.climber.move_cmd(climber_speed)
+        )
+        self.operator_controller.povDown().whileTrue(
+            self.climber.move_cmd(-climber_speed)
         )
 
-        self._operator_joystick.b().onTrue(
-            self.sweeper.VerticalCmd()
+        self.operator_controller.a().onTrue(
+            self.intake.HorizontalCmd()
+        )
+
+        self.operator_controller.b().onTrue(
+            self.intake.VerticalCmd()
         )
 
     
-    def getAutonomousCommand(self) -> commands2.Command:
+    def get_auto_command(self) -> commands2.Command:
         """Use this to pass the autonomous command to the main {@link Robot} class.
 
         :returns: the command to run in autonomous
         """
 
-        autoMode = self.auto_dashboard.get_current_auto_builder(self.drivetrain, self.front_limelight, self.back_limelight)
-        return autoMode
+        auto_mode = self.auto_dashboard.get_current_auto_builder(self.drivetrain, self.front_limelight, self.back_limelight)
+        return auto_mode
     
     def telemetry(self):
         self.periodic_publish.set(self.periodic_timer.get())

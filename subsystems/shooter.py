@@ -23,6 +23,9 @@ class Shooter(commands2.Subsystem):
         self.motor_sim.setPosition(self.motor_sim.getPosition() + speed * 2)
         self.motor_sim.getAbsoluteEncoderSim().setPosition(self.motor_sim.getPosition() + speed * 2)
 
+    def fire_cmd(self, speed: typing.Callable[[], float]):
+        return FireCommand(self, speed)
+
 class FireCommand(commands2.Command):
     def __init__(self, shooter: Shooter, speed: typing.Callable[[], float]):
         self.addRequirements(shooter)
