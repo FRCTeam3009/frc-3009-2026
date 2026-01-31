@@ -8,7 +8,13 @@ class Intake(commands2.Subsystem):
         self.HorizontalMotion.set(wpilib.DoubleSolenoid.Value.kReverse)
         self.VerticalMotion.set(wpilib.DoubleSolenoid.Value.kReverse)
 
+        # TODO add motor for actually picking up balls.
+
     def Vertical(self):
+        # TODO prevent us from going down unless we are already out.
+        # TODO prevent us from going up unless we are also already out.
+        # TODO basically, don't let us move vertically unless the horizontal position is out and deployed first.
+        # Might be better to simplify this into a "DeployCommand" or something that goes out and then down.
         self.VerticalMotion.toggle()
 
     def Horizontal(self):
@@ -41,3 +47,5 @@ class IntakeVerticalCommand(commands2.Command):
 
     def isFinished(self):
         return True
+    
+# TODO add command to turn on the motor to pick up balls off the ground.
