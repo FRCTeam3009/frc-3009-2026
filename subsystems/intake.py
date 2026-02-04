@@ -1,5 +1,8 @@
 import wpilib
 import commands2
+import rev
+import wpimath.system.plant
+import can_ids
 
 class Intake(commands2.Subsystem):
     def __init__(self):
@@ -7,10 +10,10 @@ class Intake(commands2.Subsystem):
         self.VerticalMotion = wpilib.DoubleSolenoid(wpilib.PneumaticsModuleType.CTREPCM, 2, 3)
         self.HorizontalMotion.set(wpilib.DoubleSolenoid.Value.kReverse)
         self.VerticalMotion.set(wpilib.DoubleSolenoid.Value.kReverse)
+        self.IntakeMotor = rev.SparkMax(can_ids.intake, rev.SparkLowLevel.MotorType.kBrushless)
+        self.IntakeMotorSim = rev.SparkSim(self.IntakeMotor, wpimath.system.plant.DCMotor.NEO(1))
 
         self.deploying = -1
-
-        # TODO add motor for actually picking up balls.
 
     def VerticalState(self) -> wpilib.DoubleSolenoid.Value:
         return self.VerticalMotion.get()
@@ -24,10 +27,13 @@ class Intake(commands2.Subsystem):
     def VerticalToggle(self):
         self.VerticalMotion.toggle()
 
+    def InNOutCmd(self) -> InNOutCommand:
+        return InNOutCommand(self)
+    
     def IntakeCmd(self) -> IntakeCommand:
         return IntakeCommand(self)
     
-class IntakeCommand(commands2.Command):
+class InNOutCommand(commands2.Command):
     def __init__(self, intake: Intake):
         self.addRequirements(intake)
         self.intake = intake
@@ -67,4 +73,13 @@ class IntakeCommand(commands2.Command):
 
         self.intake.deploying = -1
     
-# TODO add command to turn on the motor to pick up balls off the ground.
+class IntakeCommand(commands2.Command):
+    def __init__(self, intake: Intake):
+        self.addRequirements(intake)
+        self.intake = intake
+
+    def execute(self):
+        self.intake.IntakeMotor.set(-1)
+
+    def end(self, interrupted):
+        self.intake.IntakeMotor.set(0)

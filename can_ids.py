@@ -12,4 +12,6 @@ turn_back_right = 23
 shooter = 30
 climber = 31
 
+intake = 25
+
 pigeon = 41

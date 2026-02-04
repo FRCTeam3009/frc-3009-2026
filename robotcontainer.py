@@ -247,6 +247,9 @@ class RobotContainer:
             self.climber.move_cmd(-climber_speed)
         )
         self.operator_controller.b().onTrue(
+            self.intake.InNOutCmd()
+        )
+        self.operator_controller.y().whileTrue(
             self.intake.IntakeCmd()
         )
 
