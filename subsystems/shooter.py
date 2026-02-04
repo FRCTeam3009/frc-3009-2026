@@ -4,11 +4,12 @@ import wpimath
 import wpimath.system.plant
 import typing
 import ntcore
+import can_ids
 
 class Shooter(commands2.Subsystem):
     def __init__(self):
         commands2.CommandScheduler.registerSubsystem(self)
-        self.motor = rev.SparkMax(4, rev.SparkLowLevel.MotorType.kBrushless)
+        self.motor = rev.SparkMax(can_ids.shooter, rev.SparkLowLevel.MotorType.kBrushless)
         self.motor_sim = rev.SparkSim(self.motor, wpimath.system.plant.DCMotor.NEO(1))
 
         self.ntcore_instance = ntcore.NetworkTableInstance.getDefault()
@@ -38,11 +39,6 @@ class FireCommand(commands2.Command):
 
     def end(self, interrupted):
         self.shooter.move(0)
-    
-
-
-
-
 
     #TODO shooter command (seems to work don't have network tables yet so can't test fully)
     #TODO very basic auto shoots drives (add in drive the auto only shoots right now)
