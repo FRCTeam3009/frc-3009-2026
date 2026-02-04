@@ -246,13 +246,8 @@ class RobotContainer:
         self.operator_controller.povDown().whileTrue(
             self.climber.move_cmd(-climber_speed)
         )
-
-        self.operator_controller.a().onTrue(
-            self.intake.HorizontalCmd()
-        )
-
         self.operator_controller.b().onTrue(
-            self.intake.VerticalCmd()
+            self.intake.IntakeCmd()
         )
 
     

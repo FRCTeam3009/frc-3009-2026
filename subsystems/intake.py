@@ -8,44 +8,63 @@ class Intake(commands2.Subsystem):
         self.HorizontalMotion.set(wpilib.DoubleSolenoid.Value.kReverse)
         self.VerticalMotion.set(wpilib.DoubleSolenoid.Value.kReverse)
 
+        self.deploying = -1
+
         # TODO add motor for actually picking up balls.
 
-    def Vertical(self):
-        # TODO prevent us from going down unless we are already out.
-        # TODO prevent us from going up unless we are also already out.
-        # TODO basically, don't let us move vertically unless the horizontal position is out and deployed first.
-        # Might be better to simplify this into a "DeployCommand" or something that goes out and then down.
+    def VerticalState(self) -> wpilib.DoubleSolenoid.Value:
+        return self.VerticalMotion.get()
+
+    def HorizontalState(self) -> wpilib.DoubleSolenoid.Value:
+        return self.HorizontalMotion.get()
+
+    def HorizontalToggle(self):
+        self.HorizontalMotion.toggle()
+    
+    def VerticalToggle(self):
         self.VerticalMotion.toggle()
 
-    def Horizontal(self):
-        self.HorizontalMotion.toggle()
-
-    def HorizontalCmd(self):
-        return IntakeHorizontalCommand(self)
+    def IntakeCmd(self) -> IntakeCommand:
+        return IntakeCommand(self)
     
-    def VerticalCmd(self):
-        return IntakeVerticalCommand(self)
-
-class IntakeHorizontalCommand(commands2.Command):
+class IntakeCommand(commands2.Command):
     def __init__(self, intake: Intake):
         self.addRequirements(intake)
         self.intake = intake
+        self.forward = wpilib.DoubleSolenoid.Value.kForward
+        self.backward = wpilib.DoubleSolenoid.Value.kReverse
+        self.timer = wpilib.Timer()
+
+    def UpdateStates(self):
+        self.horizontal_state = self.intake.HorizontalState()
+        self.vertical_state = self.intake.VerticalState()
 
     def execute(self):
-        self.intake.Horizontal()
+        self.UpdateStates()
+        if self.horizontal_state == self.forward and self.vertical_state == self.forward:
+            self.intake.VerticalToggle()
+            self.timer.start()
+            self.intake.deploying = 0
+        elif self.horizontal_state == self.backward and self.vertical_state == self.backward:
+            self.intake.HorizontalToggle()
+            self.timer.start()
+            self.intake.deploying = 1
 
-    def isFinished(self):
-        return True
+    def isFinished(self) -> bool:
+        self.UpdateStates()
+        wait_time = self.timer.hasElapsed(2)
+        if self.horizontal_state == self.forward and self.vertical_state == self.backward and wait_time:
+            if self.intake.deploying == 1:
+                self.intake.VerticalToggle()
+                return True
+            elif self.intake.deploying == 0:
+                self.intake.HorizontalToggle()
+                return True
+        
+    def end(self, interrupted):
+        self.timer.stop()
+        self.timer.reset()
 
-class IntakeVerticalCommand(commands2.Command):
-    def __init__(self, intake: Intake):
-        self.addRequirements(intake)
-        self.intake = intake
-
-    def execute(self):
-        self.intake.Vertical()
-
-    def isFinished(self):
-        return True
+        self.intake.deploying = -1
     
 # TODO add command to turn on the motor to pick up balls off the ground.
