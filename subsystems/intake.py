@@ -3,6 +3,7 @@ import commands2
 import rev
 import wpimath.system.plant
 import can_ids
+import ntcore
 
 class Intake(commands2.Subsystem):
     def __init__(self):
@@ -14,6 +15,15 @@ class Intake(commands2.Subsystem):
         self.IntakeMotorSim = rev.SparkSim(self.IntakeMotor, wpimath.system.plant.DCMotor.NEO(1))
 
         self.deploying = -1
+
+        intake_motor_speed = -1
+
+        self.ntcore_instance = ntcore.NetworkTableInstance.getDefault()
+        self.nttable = self.ntcore_instance.getTable("Intake")
+        self.motor_speed_topic = self.nttable.getFloatTopic("MotorSpeed")
+        self.motor_speed_publish = self.motor_speed_topic.publish()
+        self.motor_speed_publish.set(intake_motor_speed)
+        self.motor_speed_subscribe = self.motor_speed_topic.subscribe(intake_motor_speed)
 
     def VerticalState(self) -> wpilib.DoubleSolenoid.Value:
         return self.VerticalMotion.get()
@@ -79,7 +89,7 @@ class IntakeCommand(commands2.Command):
         self.intake = intake
 
     def execute(self):
-        self.intake.IntakeMotor.set(-1)
+        self.intake.IntakeMotor.set(self.intake.motor_speed_subscribe.get())
 
     def end(self, interrupted):
         self.intake.IntakeMotor.set(0)

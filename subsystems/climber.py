@@ -63,3 +63,7 @@ class MoveClimberCommand(commands2.Command):
 
     def end(self, interrupted):
         self.climber.climber_movement(0)
+
+
+
+#TODO update all of this
