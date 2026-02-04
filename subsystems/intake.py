@@ -18,12 +18,19 @@ class Intake(commands2.Subsystem):
 
         intake_motor_speed = -1
 
+        timer_time = 2
+
         self.ntcore_instance = ntcore.NetworkTableInstance.getDefault()
         self.nttable = self.ntcore_instance.getTable("Intake")
         self.motor_speed_topic = self.nttable.getFloatTopic("MotorSpeed")
         self.motor_speed_publish = self.motor_speed_topic.publish()
         self.motor_speed_publish.set(intake_motor_speed)
         self.motor_speed_subscribe = self.motor_speed_topic.subscribe(intake_motor_speed)
+
+        self.timer_topic = self.nttable.getFloatTopic("Timer")
+        self.timer_publish = self.timer_topic.publish()
+        self.timer_publish.set(timer_time)
+        self.timer_subscribe = self.timer_topic.subscribe(timer_time)
 
     def VerticalState(self) -> wpilib.DoubleSolenoid.Value:
         return self.VerticalMotion.get()
@@ -68,7 +75,7 @@ class InNOutCommand(commands2.Command):
 
     def isFinished(self) -> bool:
         self.UpdateStates()
-        wait_time = self.timer.hasElapsed(2)
+        wait_time = self.timer.hasElapsed(self.intake.timer_subscribe)
         if self.horizontal_state == self.forward and self.vertical_state == self.backward and wait_time:
             if self.intake.deploying == 1:
                 self.intake.VerticalToggle()
@@ -76,6 +83,7 @@ class InNOutCommand(commands2.Command):
             elif self.intake.deploying == 0:
                 self.intake.HorizontalToggle()
                 return True
+        return False
         
     def end(self, interrupted):
         self.timer.stop()
