@@ -13,32 +13,28 @@ class Climber(commands2.Subsystem):
         self.climber_motor = rev.SparkMax(can_ids.climber, rev.SparkLowLevel.MotorType.kBrushless)
         self.climber_motor_sim = rev.SparkMaxSim(self.climber_motor, wpimath.system.plant.DCMotor.NEO(1))
 
-        #add limits
+        self.climber_speed = 1
 
-        self.nt_instance = ntcore.NetworkTableInstance.getDefault()
-        self.nt_table = self.nt_instance.getTable("climber")
-        self.motor_topic = self.nt_table.getDoubleArrayTopic("motor")
-        self.motor_publish = self.motor_topic.publish()
-        self.motor_publish.set([0.0, 0.0])
+        self.ntcore_instance = ntcore.NetworkTableInstance.getDefault()
+        self.climber_table = self.ntcore_instance.getTable("Climber")
+        self.climber_topic = self.climber_table.getFloatTopic("MotorSpeed")
+        self.motor_speed_publish = self.climber_topic.publish()
+        self.motor_speed_publish.set(self.climber_speed)
+        self.motor_speed_subscribe = self.climber_topic.subscribe(self.climber_speed)
 
     def climber_movement(self, speed: float):
-        # if self.get_position() > self.up_limit and speed > 0:
-        #     self.climber_motor.set(0)
-        # elif self.get_position() < self.down_limit and speed < 0:
-        #     self.climber_motor.set(0)
-        # else:
         self.climber_motor.set(speed)
         self.climber_motor_sim.setAppliedOutput(speed)
 
     def get_position(self):
         return self.climber_motor.getEncoder().getPosition()
     
-    def telemetry(self):
-        positions = [
-            self.climber_motor.getEncoder().getPosition(), 
-            self.climber_motor.getAbsoluteEncoder().getPosition(),
-            ]
-        self.motor_publish.set(positions)
+    #def telemetry(self):
+        #positions = [
+        #    self.climber_motor.getEncoder().getPosition(), 
+        #    self.climber_motor.getAbsoluteEncoder().getPosition(),
+        #    ]
+        #self.motor_publish.set(positions)
 
     def move_cmd(self, speed: float):
         return MoveClimberCommand(self, speed)
@@ -49,21 +45,9 @@ class MoveClimberCommand(commands2.Command):
         self.speed = speed
         self.addRequirements(self.climber)
 
-        self.command_timer = wpilib.Timer()
-        self.ntcore_instance = ntcore.NetworkTableInstance.getDefault()
-        self.commands = self.ntcore_instance.getTable("commands")
-        self.command_topic = self.commands.getFloatTopic("MoveClimber")
-        self.command_publish = self.command_topic.publish()
-        self.command_publish.set(0.0)
-
     def execute(self):
-        self.climber.climber_movement(self.speed)
-        
-        self.command_publish.set(self.command_timer.get())
+        self.climber.climber_speed = self.climber.motor_speed_subscribe.get()
+        self.climber.climber_movement(self.speed * self.climber.climber_speed)
 
     def end(self, interrupted):
         self.climber.climber_movement(0)
-
-
-
-#TODO update all of this

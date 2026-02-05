@@ -239,12 +239,11 @@ class RobotContainer:
             self.shooter.fire_cmd(shoot_speed)
         )
 
-        climber_speed = 0.5
         self.operator_controller.povUp().whileTrue(
-            self.climber.move_cmd(climber_speed)
+            self.climber.move_cmd(self.climber.climber_speed)
         )
         self.operator_controller.povDown().whileTrue(
-            self.climber.move_cmd(-climber_speed)
+            self.climber.move_cmd(-self.climber.climber_speed)
         )
         self.operator_controller.b().onTrue(
             self.intake.InNOutCmd()
