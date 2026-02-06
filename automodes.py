@@ -64,33 +64,16 @@ def pathplanner_constraints():
         wpimath.units.rotationsToRadians(0.75), 
     )
 
-def noob_auto_drive_straight_forward(drivetrain: subsystems.command_swerve_drivetrain.CommandSwerveDrivetrain, 
-                     front_limelight: subsystems.limelight.Limelight, 
-                     back_limelight: subsystems.limelight.Limelight,
-                     climber: subsystems.climber.Climber,
-                     shooter: subsystems.shooter.Shooter,
-                     intake: subsystems.intake.Intake
-                     ) -> commands2.Command:
-    
+def noob_auto_drive_straight_forward(drivetrain: subsystems.command_swerve_drivetrain.CommandSwerveDrivetrain) -> commands2.Command:
     return subsystems.drive_robot_relative.drive_forward_command(drivetrain, wpimath.units.meters(1.5), subsystems.drive_robot_relative.NORMAL_SPEED)
 
-def sit(drivetrain: subsystems.command_swerve_drivetrain.CommandSwerveDrivetrain, 
-                     front_limelight: subsystems.limelight.Limelight, 
-                     back_limelight: subsystems.limelight.Limelight,
-                     climber: subsystems.climber.Climber,
-                     shooter: subsystems.shooter.Shooter,
-                     intake: subsystems.intake.Intake
-                     ) -> commands2.Command:
-    
+def sit() -> commands2.Command:
     return commands2.Command()
 
-def move_shoot(drivetrain: subsystems.command_swerve_drivetrain.CommandSwerveDrivetrain, 
-                     front_limelight: subsystems.limelight.Limelight, 
-                     back_limelight: subsystems.limelight.Limelight,
-                     climber: subsystems.climber.Climber,
-                     shooter: subsystems.shooter.Shooter,
-                     intake: subsystems.intake.Intake
-                     ) -> commands2.Command:
+def move_shoot(
+        drivetrain: subsystems.command_swerve_drivetrain.CommandSwerveDrivetrain, 
+        shooter: subsystems.shooter.Shooter,
+    ) -> commands2.Command:
     move_to_pose = positions[1]
     cmds = commands2.SequentialCommandGroup()
     cmds.addCommands(drive_to_pose(move_to_pose))
@@ -110,17 +93,18 @@ def shoot_fuel(shooter: subsystems.shooter.Shooter):
     return shooter.fire_cmd(shooter_speed)
 
 class AutoDashboard():
-    auto_map = {
-        "noob_forward": noob_auto_drive_straight_forward,  
-        "sit": sit,
-        "move_shoot": move_shoot,
-       }
+    auto_mode_list = [
+        "sit",
+        "noob_forward",
+        "move_shoot",
+    ]
+            
     def __init__(self):
         self.nt_instance = ntcore.NetworkTableInstance.getDefault()
         self.table = self.nt_instance.getTable("auto modes")
         self.optionstopic = self.table.getStringArrayTopic("options")
         self.options_publisher = self.optionstopic.publish()
-        self.options_publisher.set(list(self.auto_map.keys()))
+        self.options_publisher.set(list(self.auto_mode_list))
 
         self.selectedtopic = self.table.getStringTopic("selected")
         self.selected_publisher = self.selectedtopic.publish()
@@ -129,12 +113,16 @@ class AutoDashboard():
         self.current_auto = self.selected_subscriber.get()        
 
     def update(self):
-        self.options_publisher.set(list(self.auto_map.keys()))
+        self.options_publisher.set(list(self.auto_mode_list))
         self.current_auto = self.selected_subscriber.get()
 
     def get_current_auto_builder(self, drivetrain, front_limelight, back_limelight, climber, shooter, intake):
-        auto_builder = self.auto_map[self.current_auto]
-        return auto_builder(drivetrain, front_limelight, back_limelight, climber, shooter, intake)
+        if self.current_auto == "noob_forward":
+            return noob_auto_drive_straight_forward(drivetrain)
+        elif self.current_auto == "move_shoot":
+            return move_shoot(drivetrain, shooter)
+        else:
+            return sit()
     
 
 class WaitCommand(commands2.Command):
