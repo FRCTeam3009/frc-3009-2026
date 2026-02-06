@@ -44,4 +44,3 @@ class FireCommand(commands2.Command):
         self.shooter.move(0)
 
     #TODO very basic auto shoots drives (add in drive the auto only shoots right now)
-    #TODO add climber
