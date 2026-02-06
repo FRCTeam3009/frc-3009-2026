@@ -259,7 +259,7 @@ class RobotContainer:
         :returns: the command to run in autonomous
         """
 
-        auto_mode = self.auto_dashboard.get_current_auto_builder(self.drivetrain, self.front_limelight, self.back_limelight)
+        auto_mode = self.auto_dashboard.get_current_auto_builder(self.drivetrain, self.front_limelight, self.back_limelight, self.climber, self.shooter, self.intake)
         return auto_mode
     
     def telemetry(self):

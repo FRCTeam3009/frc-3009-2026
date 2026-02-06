@@ -12,14 +12,14 @@ class Shooter(commands2.Subsystem):
         self.motor = rev.SparkMax(can_ids.shooter, rev.SparkLowLevel.MotorType.kBrushless)
         self.motor_sim = rev.SparkSim(self.motor, wpimath.system.plant.DCMotor.NEO(1))
 
-        shooter_speed = 1
+        self.shooter_speed = 1
 
         self.ntcore_instance = ntcore.NetworkTableInstance.getDefault()
         self.shooter_table = self.ntcore_instance.getTable("Shooter")
         self.shooter_topic = self.shooter_table.getFloatTopic("MotorSpeed")
         self.motor_speed_publish = self.shooter_topic.publish()
-        self.motor_speed_publish.set(shooter_speed)
-        self.motor_speed_subscribe = self.shooter_topic.subscribe(shooter_speed)
+        self.motor_speed_publish.set(self.shooter_speed)
+        self.motor_speed_subscribe = self.shooter_topic.subscribe(self.shooter_speed)
     
     def move(self, speed: float):
         self.motor.set(speed)
@@ -42,5 +42,3 @@ class FireCommand(commands2.Command):
 
     def end(self, interrupted):
         self.shooter.move(0)
-
-    #TODO very basic auto shoots drives (add in drive the auto only shoots right now)

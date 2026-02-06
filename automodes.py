@@ -13,6 +13,9 @@ import subsystems.limelight_positions
 import subsystems.shooter
 from phoenix6 import swerve
 from wpimath.geometry import Rotation2d, Pose2d
+import subsystems.climber
+import subsystems.intake
+import subsystems.shooter
 
 # Positions for the robot to line up to the April Tags, indexed by April Tag IDs
 positions = {}
@@ -64,6 +67,9 @@ def pathplanner_constraints():
 def noob_auto_drive_straight_forward(drivetrain: subsystems.command_swerve_drivetrain.CommandSwerveDrivetrain, 
                      front_limelight: subsystems.limelight.Limelight, 
                      back_limelight: subsystems.limelight.Limelight,
+                     climber: subsystems.climber.Climber,
+                     shooter: subsystems.shooter.Shooter,
+                     intake: subsystems.intake.Intake
                      ) -> commands2.Command:
     
     return subsystems.drive_robot_relative.drive_forward_command(drivetrain, wpimath.units.meters(1.5), subsystems.drive_robot_relative.NORMAL_SPEED)
@@ -71,6 +77,9 @@ def noob_auto_drive_straight_forward(drivetrain: subsystems.command_swerve_drive
 def sit(drivetrain: subsystems.command_swerve_drivetrain.CommandSwerveDrivetrain, 
                      front_limelight: subsystems.limelight.Limelight, 
                      back_limelight: subsystems.limelight.Limelight,
+                     climber: subsystems.climber.Climber,
+                     shooter: subsystems.shooter.Shooter,
+                     intake: subsystems.intake.Intake
                      ) -> commands2.Command:
     
     return commands2.Command()
@@ -78,54 +87,33 @@ def sit(drivetrain: subsystems.command_swerve_drivetrain.CommandSwerveDrivetrain
 def move_shoot(drivetrain: subsystems.command_swerve_drivetrain.CommandSwerveDrivetrain, 
                      front_limelight: subsystems.limelight.Limelight, 
                      back_limelight: subsystems.limelight.Limelight,
-                     shooter: subsystems.shooter.Shooter
+                     climber: subsystems.climber.Climber,
+                     shooter: subsystems.shooter.Shooter,
+                     intake: subsystems.intake.Intake
                      ) -> commands2.Command:
-    approx_start = Pose2d(0, 0, 0)
-    auto_commands = [AutoCommand(positions[1], AutoCommand.drive_shoot, 21), 
-                     AutoCommand(positions[1], AutoCommand.wait, 21),
-                     ]
-    return get_auto_command(drivetrain, front_limelight, back_limelight, approx_start, auto_commands, shooter)
-
-def get_auto_command(drivetrain: subsystems.command_swerve_drivetrain.CommandSwerveDrivetrain, 
-                     front_limelight: subsystems.limelight.Limelight, 
-                     back_limelight: subsystems.limelight.Limelight,
-                     approx_start: Pose2d,
-                     auto_commands: list[AutoCommand],
-                     shooter: subsystems.shooter.Shooter
-                     ) -> commands2.Command:
-    
-    # Assume we start on the black line, but ultimately we don't care where we start.
-    
-    drivetrain.reset_pose(approx_start)
-
+    move_to_pose = positions[1]
     cmds = commands2.SequentialCommandGroup()
-
-    for command in auto_commands:
-        if command.type == AutoCommand.wait:
-            cmds.addCommands(WaitCommand(drivetrain))
-        elif command.type == AutoCommand.drive_to_pose:
-            cmds.addCommands(drive_to_pose(command))
+    cmds.addCommands(drive_to_pose(move_to_pose))
+    cmds.addCommands(shoot_fuel(shooter).withTimeout(5.0))
     return cmds
 
-def drive_to_pose(cmd : AutoCommand):
+def drive_to_pose(position: Pose2d):
     return pathplannerlib.auto.AutoBuilder.pathfindToPose(
-            cmd.position,
+            position,
             pathplanner_constraints(),
             0.0,
         )
 
 def shoot_fuel(shooter: subsystems.shooter.Shooter):
-    
-    cmds = commands2.SequentialCommandGroup()
-    fire = subsystems.shooter.Shooter.move(shooter)
-    cmds.addCommands(fire)
-
-    return cmds
+    def shooter_speed():
+        return shooter.shooter_speed
+    return shooter.fire_cmd(shooter_speed)
 
 class AutoDashboard():
     auto_map = {
         "noob_forward": noob_auto_drive_straight_forward,  
         "sit": sit,
+        "move_shoot": move_shoot,
        }
     def __init__(self):
         self.nt_instance = ntcore.NetworkTableInstance.getDefault()
@@ -144,9 +132,9 @@ class AutoDashboard():
         self.options_publisher.set(list(self.auto_map.keys()))
         self.current_auto = self.selected_subscriber.get()
 
-    def get_current_auto_builder(self, drivetrain, front_limelight, back_limelight):
+    def get_current_auto_builder(self, drivetrain, front_limelight, back_limelight, climber, shooter, intake):
         auto_builder = self.auto_map[self.current_auto]
-        return auto_builder(drivetrain, front_limelight, back_limelight)
+        return auto_builder(drivetrain, front_limelight, back_limelight, climber, shooter, intake)
     
 
 class WaitCommand(commands2.Command):
@@ -169,8 +157,3 @@ class WaitCommand(commands2.Command):
         if self.timer.hasElapsed(9):
             return True
         return False
-    
-    def shoot(shooter : subsystems.shooter.Shooter):
-        cmds = commands2.SequentialCommandGroup()
-        cmds.addCommands(shoot_fuel(shooter))
-        return cmds
