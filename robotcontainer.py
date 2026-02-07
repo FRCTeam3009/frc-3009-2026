@@ -87,8 +87,13 @@ class RobotContainer:
         self.speed_limit = subsystems.drive_robot_relative.NORMAL_SPEED
 
         self.shooter = subsystems.shooter.Shooter()
+        commands2.CommandScheduler.getInstance().registerSubsystem(self.shooter)
+
         self.intake = subsystems.intake.Intake()
+        commands2.CommandScheduler.getInstance().registerSubsystem(self.intake)
+
         self.climber = subsystems.climber.Climber()
+        commands2.CommandScheduler.getInstance().registerSubsystem(self.climber)
 
         # Configure the button bindings
         self.configure_button_bindings()
@@ -259,7 +264,7 @@ class RobotContainer:
         :returns: the command to run in autonomous
         """
 
-        auto_mode = self.auto_dashboard.get_current_auto_builder(self.drivetrain, self.front_limelight, self.back_limelight, self.climber, self.shooter, self.intake)
+        auto_mode = self.auto_dashboard.get_current_auto_builder(self.drivetrain, self.shooter)
         return auto_mode
     
     def telemetry(self):

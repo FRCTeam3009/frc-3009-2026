@@ -75,7 +75,7 @@ class InNOutCommand(commands2.Command):
 
     def isFinished(self) -> bool:
         self.UpdateStates()
-        wait_time = self.timer.hasElapsed(self.intake.timer_subscribe)
+        wait_time = self.timer.hasElapsed(self.intake.timer_subscribe.get())
         if self.horizontal_state == self.forward and self.vertical_state == self.backward and wait_time:
             if self.intake.deploying == 1:
                 self.intake.VerticalToggle()
@@ -85,7 +85,7 @@ class InNOutCommand(commands2.Command):
                 return True
         return False
         
-    def end(self, interrupted):
+    def end(self, interrupted: bool):
         self.timer.stop()
         self.timer.reset()
 
@@ -99,5 +99,5 @@ class IntakeCommand(commands2.Command):
     def execute(self):
         self.intake.IntakeMotor.set(self.intake.motor_speed_subscribe.get())
 
-    def end(self, interrupted):
+    def end(self, interrupted: bool):
         self.intake.IntakeMotor.set(0)

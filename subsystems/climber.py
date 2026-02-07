@@ -2,18 +2,16 @@ import rev
 import wpimath.system.plant
 import commands2
 import ntcore
-import wpilib
 import can_ids
 
 SPEED = 1.0
 
 class Climber(commands2.Subsystem):
     def __init__(self):
-        commands2.CommandScheduler.registerSubsystem(self)
         self.climber_motor = rev.SparkMax(can_ids.climber, rev.SparkLowLevel.MotorType.kBrushless)
         self.climber_motor_sim = rev.SparkMaxSim(self.climber_motor, wpimath.system.plant.DCMotor.NEO(1))
 
-        self.climber_speed = 1
+        self.climber_speed = 1.0
 
         self.ntcore_instance = ntcore.NetworkTableInstance.getDefault()
         self.climber_table = self.ntcore_instance.getTable("Climber")
@@ -49,5 +47,5 @@ class MoveClimberCommand(commands2.Command):
         self.climber.climber_speed = self.climber.motor_speed_subscribe.get()
         self.climber.climber_movement(self.speed * self.climber.climber_speed)
 
-    def end(self, interrupted):
+    def end(self, interrupted: bool):
         self.climber.climber_movement(0)

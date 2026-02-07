@@ -1,20 +1,15 @@
 import pathplannerlib.path
 import pathplannerlib.auto
-import wpimath.geometry
 import wpimath.units
 import commands2
 import subsystems.command_swerve_drivetrain
 import subsystems.drive_robot_relative
-import subsystems.limelight
 import ntcore
 import wpilib
 import commands2
-import subsystems.limelight_positions
 import subsystems.shooter
 from phoenix6 import swerve
 from wpimath.geometry import Rotation2d, Pose2d
-import subsystems.climber
-import subsystems.intake
 import subsystems.shooter
 
 # Positions for the robot to line up to the April Tags, indexed by April Tag IDs
@@ -71,7 +66,6 @@ def sit() -> commands2.Command:
     return commands2.Command()
 
 def move_shoot(
-        drivetrain: subsystems.command_swerve_drivetrain.CommandSwerveDrivetrain, 
         shooter: subsystems.shooter.Shooter,
     ) -> commands2.Command:
     move_to_pose = positions[1]
@@ -93,10 +87,14 @@ def shoot_fuel(shooter: subsystems.shooter.Shooter):
     return shooter.fire_cmd(shooter_speed)
 
 class AutoDashboard():
+    AUTO_SIT = "sit"
+    AUTO_NOOB_FORWARD = "noob_forward"
+    AUTO_MOVE_SHOOT = "move_shoot"
+
     auto_mode_list = [
-        "sit",
-        "noob_forward",
-        "move_shoot",
+        AUTO_SIT,
+        AUTO_NOOB_FORWARD,
+        AUTO_MOVE_SHOOT,
     ]
             
     def __init__(self):
@@ -116,11 +114,11 @@ class AutoDashboard():
         self.options_publisher.set(list(self.auto_mode_list))
         self.current_auto = self.selected_subscriber.get()
 
-    def get_current_auto_builder(self, drivetrain, front_limelight, back_limelight, climber, shooter, intake):
-        if self.current_auto == "noob_forward":
+    def get_current_auto_builder(self, drivetrain, shooter):
+        if self.current_auto == AutoDashboard.AUTO_NOOB_FORWARD:
             return noob_auto_drive_straight_forward(drivetrain)
-        elif self.current_auto == "move_shoot":
-            return move_shoot(drivetrain, shooter)
+        elif self.current_auto == AutoDashboard.AUTO_MOVE_SHOOT:
+            return move_shoot(shooter)
         else:
             return sit()
     

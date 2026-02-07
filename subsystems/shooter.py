@@ -8,7 +8,6 @@ import can_ids
 
 class Shooter(commands2.Subsystem):
     def __init__(self):
-        commands2.CommandScheduler.registerSubsystem(self)
         self.motor = rev.SparkMax(can_ids.shooter, rev.SparkLowLevel.MotorType.kBrushless)
         self.motor_sim = rev.SparkSim(self.motor, wpimath.system.plant.DCMotor.NEO(1))
 
@@ -40,5 +39,5 @@ class FireCommand(commands2.Command):
         shooter_speed = self.shooter.motor_speed_subscribe.get()
         self.shooter.move(self.speed() * shooter_speed)
 
-    def end(self, interrupted):
+    def end(self, interrupted: bool):
         self.shooter.move(0)
