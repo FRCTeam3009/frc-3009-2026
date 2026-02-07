@@ -29,6 +29,11 @@ def get_rotation():
 
 rot_auto = get_rotation()
 
+def start_pose(drivetrain: subsystems.command_swerve_drivetrain.CommandSwerveDrivetrain):
+    starting_position = Pose2d(5, 5, 0)
+    drivetrain.reset_pose(starting_position)
+    return starting_position
+
 class AutoCommand():
     drive_to_pose = 1
     drive_shoot = 2
@@ -57,8 +62,10 @@ def move_shoot_center(
         shooter: subsystems.shooter.Shooter,
         drivetrain: subsystems.command_swerve_drivetrain.CommandSwerveDrivetrain
     ) -> commands2.Command:
+    sp = start_pose(drivetrain)
+    transform = sp.transformBy(wpimath.geometry.Transform2d(-auto_movement, 0, 0))
     cmds = commands2.SequentialCommandGroup()
-    cmds.addCommands(subsystems.drive_robot_relative.drive_command(drivetrain, -auto_movement, speed_auto, 0))
+    cmds.addCommands(drive_to_pose(transform))
     cmds.addCommands(shoot_fuel(shooter).withTimeout(5.0))
     return cmds
 
@@ -66,8 +73,10 @@ def move_shoot_right(
         shooter: subsystems.shooter.Shooter,
         drivetrain: subsystems.command_swerve_drivetrain.CommandSwerveDrivetrain
     ) -> commands2.Command:
+    sp = start_pose(drivetrain)
+    transform = sp.transformBy(wpimath.geometry.Transform2d(-auto_movement, 0, rot_auto))
     cmds = commands2.SequentialCommandGroup()
-    cmds.addCommands(subsystems.drive_robot_relative.drive_command(drivetrain, -auto_movement, speed_auto, rot_auto))
+    cmds.addCommands(drive_to_pose(transform))
     cmds.addCommands(shoot_fuel(shooter).withTimeout(5.0))
     return cmds
 
@@ -75,8 +84,10 @@ def move_shoot_left(
         shooter: subsystems.shooter.Shooter,
         drivetrain: subsystems.command_swerve_drivetrain.CommandSwerveDrivetrain
     ) -> commands2.Command:
+    sp = start_pose(drivetrain)
+    transform = sp.transformBy(wpimath.geometry.Transform2d(-auto_movement, 0, -rot_auto))
     cmds = commands2.SequentialCommandGroup()
-    cmds.addCommands(subsystems.drive_robot_relative.drive_command(drivetrain, -auto_movement, speed_auto, -rot_auto))
+    cmds.addCommands(drive_to_pose(transform))
     cmds.addCommands(shoot_fuel(shooter).withTimeout(5.0))
     return cmds
 
