@@ -4,6 +4,7 @@ import subsystems.command_swerve_drivetrain
 import wpimath
 import wpimath.units
 import phoenix6.swerve
+import math
 
 FORWARD_OFFSET = wpimath.units.inchesToMeters(22.0) # inches away from the Coral posts
 CORAL_POST_OFFSET = wpimath.units.inchesToMeters(-3.0) # inches offset from center of AprilTag
@@ -107,14 +108,10 @@ class DriveRobotRelativeCommand(commands2.Command):
         drive_request = lambda: ROBOT_RELATIVE.with_velocity_x(0.0).with_velocity_y(0.0).with_rotational_rate(0.0)
         self.drive_train.apply_request(drive_request).execute()
 
-def drive_forward_command(drive_train: subsystems.command_swerve_drivetrain.CommandSwerveDrivetrain, offset: float, speed: float):
-    pose = wpimath.geometry.Transform2d(offset, 0.0, 0.0)
+def drive_command(drive_train: subsystems.command_swerve_drivetrain.CommandSwerveDrivetrain, offset: float, speed: float, rotation: wpimath.units.radians):
+    pose = wpimath.geometry.Transform2d(offset, 0.0, rotation)
     return DriveRobotRelativeCommand(drive_train, pose, speed)
 
 def drive_sideways_command(drive_train: subsystems.command_swerve_drivetrain.CommandSwerveDrivetrain, offset: float, speed: float):
     pose = wpimath.geometry.Transform2d(0.0, offset, 0.0)
-    return DriveRobotRelativeCommand(drive_train, pose, speed)
-
-def drive_backward_command(drive_train: subsystems.command_swerve_drivetrain.CommandSwerveDrivetrain, offset: float, speed: float):
-    pose = wpimath.geometry.Transform2d(-1 * offset, 0.0, 0.0)
     return DriveRobotRelativeCommand(drive_train, pose, speed)

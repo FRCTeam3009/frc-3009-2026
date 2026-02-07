@@ -235,7 +235,7 @@ class RobotContainer:
         self.drivetrain.register_telemetry(telemetry_func)
 
         self.driver_controller.b().whileTrue(
-            subsystems.drive_robot_relative.drive_forward_command(self.drivetrain, subsystems.drive_robot_relative.FORWARD_OFFSET, self.speed_limit)
+            subsystems.drive_robot_relative.drive_command(self.drivetrain, subsystems.drive_robot_relative.FORWARD_OFFSET, self.speed_limit, 0)
         )
         
         def shoot_speed():
