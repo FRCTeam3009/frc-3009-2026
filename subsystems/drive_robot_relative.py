@@ -38,11 +38,8 @@ class DriveRobotRelativeCommand(commands2.Command):
         self.horizontal = 0.0
         self.rotation = 0.0
 
-        self.start_pose : wpimath.geometry.Pose2d
-        self.start_pose = None
-
-        self.end_pose : wpimath.geometry.Pose2d
-        self.end_pose = None
+        self.start_pose = wpimath.geometry.Pose2d()
+        self.end_pose = wpimath.geometry.Pose2d()
 
 
     def initialize(self):

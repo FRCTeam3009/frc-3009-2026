@@ -6,7 +6,7 @@ import subsystems.limelight
 
 def pose2d_from_targetpose(targetpose: list[float]) -> wpimath.geometry.Pose2d:
     if len(targetpose) < 6:
-        return None
+        return wpimath.geometry.Pose2d()
         
     # [horizontal, vertical, forward, pitch, yaw, roll]
     forward = targetpose[2] # meters
@@ -17,7 +17,7 @@ def pose2d_from_targetpose(targetpose: list[float]) -> wpimath.geometry.Pose2d:
     
 def pose2d_from_botpose(botpose: list[float]) -> wpimath.geometry.Pose2d:
     if len(botpose) < 6:
-        return None
+        return wpimath.geometry.Pose2d()
         
     # [forward, horizontal, vertical, roll, pitch, yaw, latency, tag count, tag span, average distance, average area]
     forward = botpose[0] # meters
@@ -25,6 +25,9 @@ def pose2d_from_botpose(botpose: list[float]) -> wpimath.geometry.Pose2d:
     rotation = botpose[5] # degrees
 
     return wpimath.geometry.Pose2d(forward, horizontal, wpimath.units.degreesToRadians(rotation))
+
+def is_pose2d_zero(pose: wpimath.geometry.Pose2d):
+    return pose.X() == 0 and pose.Y() == 0 and pose.rotation().degrees() == 0
 
 class SmoothPosition(object):
     def __init__(self):
@@ -43,7 +46,7 @@ class SmoothPosition(object):
         self.pose_list = list[wpimath.geometry.Pose2d]()
 
         n = 0
-        while n < 10:
+        while n < 5:
             self.pose_list.append(wpimath.geometry.Pose2d(0.0, 0.0, 0.0))
             n += 1
 

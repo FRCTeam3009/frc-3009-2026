@@ -7,6 +7,8 @@ import wpimath
 import subsystems.drive_robot_relative
 import subsystems.limelight_positions
 import json
+import typing
+import phoenix6.utils
 
 APRIL_TAG_OFFSET = 0.56
 CORAL_OFFSET = wpimath.units.inchesToMeters(-2.5)
@@ -65,10 +67,13 @@ class Limelight(object):
         return commands2.cmd.run(self.update).repeatedly().ignoringDisable(True)
 
     def update(self):
+        # Estimate bot position
         botpose = self.botposesub.get()
-        botpose2d = subsystems.limelight_positions.pose2d_from_targetpose(botpose)
-        self.smooth_botpose.append_pose(botpose2d)
+        botpose2d = subsystems.limelight_positions.pose2d_from_botpose(botpose)
+        if not subsystems.limelight_positions.is_pose2d_zero(botpose2d):
+            self.odometry_update(botpose2d)
 
+        # Update AprilTag target positions
         json_str = self.json_subscribe.get()
         if json_str is None or json_str == "":
             for key in self.target_poses.keys():
@@ -88,21 +93,18 @@ class Limelight(object):
             if not saw_tag:
                 val = wpimath.geometry.Pose2d(0.0, 0.0, 0.0)
                 self.target_poses[key].append_pose(val)
-
-
-    def odometry_command(self) -> commands2.Command:
-        return commands2.cmd.run(self.odometry_update).repeatedly().ignoringDisable(True)
     
-    def odometry_update(self):
-        self.drive_train.add_vision_measurement(self.smooth_botpose.get_average_pose(), 0.05)
+    def odometry_update(self, pose: wpimath.geometry.Pose2d):
+        self.drive_train.add_vision_measurement(pose, phoenix6.utils.get_current_time_seconds())
     
     def telemetry(self):
         pose = self.target_poses[19].get_average_pose()
         pose = subsystems.limelight_positions.correct_target_pose(pose)
-        self.bot_pose_target_var = [wpimath.units.metersToInches(pose.X()), 
+        bot_pose_target_var : list[typing.SupportsFloat]
+        bot_pose_target_var = [wpimath.units.metersToInches(pose.X()), 
                                     wpimath.units.metersToInches(pose.Y()), 
                                     pose.rotation().degrees()]
-        self.bot_pose_publish.set(self.bot_pose_target_var)
+        self.bot_pose_publish.set(bot_pose_target_var)
 
 class LineupCommand(commands2.Command):
     def __init__(self, drivetrain: subsystems.command_swerve_drivetrain.CommandSwerveDrivetrain, limelight: Limelight, april_id: int):
