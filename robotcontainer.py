@@ -70,7 +70,7 @@ class RobotContainer:
 
         self.drivetrain.reset_pose(wpimath.geometry.Pose2d(10, 2, 0))
 
-        self.front_limelight = subsystems.limelight.Limelight("limelight-front", self.drivetrain)
+        self.front_limelight = subsystems.limelight.Limelight("limelight", self.drivetrain)
         self.back_limelight = subsystems.limelight.Limelight("limelight-back", self.drivetrain)
 
         self.auto_dashboard = automodes.AutoDashboard()
@@ -255,6 +255,9 @@ class RobotContainer:
         )
         self.operator_controller.y().whileTrue(
             self.intake.IntakeCmd()
+        )
+        (self.driver_controller.back() & self.driver_controller.start()).whileTrue(
+            self.front_limelight.reset_pose_command(self.drivetrain)
         )
 
     

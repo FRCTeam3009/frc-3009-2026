@@ -63,6 +63,10 @@ class Limelight(object):
         self.offset_pub = self.offset_topic.publish()
         self.offset_pub.set([0.0, 0.0, 0.0])
 
+        self.limelight_pose_topic = self.table.getStructTopic("limelight pose", wpimath.geometry.Pose2d)
+        self.limelight_pose_publish = self.limelight_pose_topic.publish()
+        self.limelight_pose_publish.set(wpimath.geometry.Pose2d())
+
     def update_command(self) -> commands2.Command:
         return commands2.cmd.run(self.update).repeatedly().ignoringDisable(True)
 
@@ -106,6 +110,14 @@ class Limelight(object):
                                     pose.rotation().degrees()]
         self.bot_pose_publish.set(bot_pose_target_var)
 
+        botpose = self.botposesub.get()
+        botpose2d = subsystems.limelight_positions.pose2d_from_botpose(botpose)
+        if not subsystems.limelight_positions.is_pose2d_zero(botpose2d):
+            self.limelight_pose_publish.set(botpose2d)
+
+    def reset_pose_command(self, drivetrain):
+        return ResetPose(self, drivetrain)
+
 class LineupCommand(commands2.Command):
     def __init__(self, drivetrain: subsystems.command_swerve_drivetrain.CommandSwerveDrivetrain, limelight: Limelight, april_id: int):
         self.drivetrain = drivetrain
@@ -132,3 +144,14 @@ class LineupCommand(commands2.Command):
     
     def isFinished(self):
         return self.command.isFinished()
+    
+class ResetPose(commands2.Command):
+    def __init__(self, limelight: Limelight, drivetrain: subsystems.command_swerve_drivetrain.CommandSwerveDrivetrain):
+        self.limelight = limelight
+        self.drivetrain = drivetrain
+
+    def execute(self):
+        botpose = self.limelight.botposesub.get()
+        botpose2d = subsystems.limelight_positions.pose2d_from_botpose(botpose)
+        if not subsystems.limelight_positions.is_pose2d_zero(botpose2d):
+            self.drivetrain.reset_pose(botpose2d)
