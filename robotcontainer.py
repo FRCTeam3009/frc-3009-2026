@@ -70,7 +70,7 @@ class RobotContainer:
 
         self.drivetrain.reset_pose(wpimath.geometry.Pose2d(10, 2, 0))
 
-        self.front_limelight = subsystems.limelight.Limelight("limelight", self.drivetrain)
+        self.front_limelight = subsystems.limelight.Limelight("limelight-front", self.drivetrain)
         self.back_limelight = subsystems.limelight.Limelight("limelight-back", self.drivetrain)
 
         self.auto_dashboard = automodes.AutoDashboard()
@@ -259,6 +259,18 @@ class RobotContainer:
         (self.driver_controller.back() & self.driver_controller.start()).whileTrue(
             self.front_limelight.reset_pose_command(self.drivetrain)
         )
+
+        # TODO use this to know which side is active.
+        # This data is empty before the start.
+        # It is only updated once at the end of auto.
+        # It is either 'R' or 'B' for red and blue.
+        # It specifies which side will go *inactive* first (both are active at the start)
+        # TODO Create a new class that polls for this until it gets a value.
+        # Then it can start timers to determine which field is currently active.
+        # We can publish the timer data too for countdown info.
+        # Test it with the full practice mode countdown.
+        #
+        # wpilib.DriverStation.getGameSpecificMessage()
 
     
     def get_auto_command(self) -> commands2.Command:

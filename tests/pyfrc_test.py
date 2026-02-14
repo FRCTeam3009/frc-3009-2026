@@ -4,7 +4,7 @@
 '''
 
 # Run the default tests, takes ~20 seconds
-from pyfrc.tests import *
+from pyfrc.tests import * # type: ignore
 
 import wpimath.geometry
 import subsystems.limelight_positions
@@ -17,7 +17,7 @@ def float_equals(a: float, b: float) -> bool:
 def test_is_pose2d_zero():
     # None
     test : wpimath.geometry.Pose2d
-    test = None
+    test = None # type: ignore
     output = subsystems.limelight_positions.is_pose2d_zero(test)
     assert(output == False)
 
@@ -35,7 +35,7 @@ test_is_pose2d_zero()
 def test_pose2d_from_targetpose():
     # None
     test = None
-    output = subsystems.limelight_positions.pose2d_from_targetpose(test)
+    output = subsystems.limelight_positions.pose2d_from_targetpose(test) # type: ignore
     assert(subsystems.limelight_positions.is_pose2d_zero(output))
 
     # Empty
@@ -54,7 +54,7 @@ test_pose2d_from_targetpose()
 def test_pose2d_from_botpose():
     # None
     test = None
-    output = subsystems.limelight_positions.pose2d_from_botpose(test)
+    output = subsystems.limelight_positions.pose2d_from_botpose(test) # type: ignore
     assert(subsystems.limelight_positions.is_pose2d_zero(output))
 
     # Empty
@@ -73,7 +73,7 @@ test_pose2d_from_botpose()
 def test_correct_target_pose():
     # None
     test = None
-    output = subsystems.limelight_positions.correct_target_pose(test)
+    output = subsystems.limelight_positions.correct_target_pose(test) # type: ignore
     assert(output is None)
 
     # Zero
