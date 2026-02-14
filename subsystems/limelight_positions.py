@@ -5,7 +5,7 @@ import wpilib
 import subsystems.limelight
 
 def pose2d_from_targetpose(targetpose: list[float]) -> wpimath.geometry.Pose2d:
-    if len(targetpose) < 6:
+    if targetpose is None or len(targetpose) < 6:
         return wpimath.geometry.Pose2d()
         
     # [horizontal, vertical, forward, pitch, yaw, roll]
@@ -16,7 +16,7 @@ def pose2d_from_targetpose(targetpose: list[float]) -> wpimath.geometry.Pose2d:
     return wpimath.geometry.Pose2d(forward, horizontal, wpimath.units.degreesToRadians(rotation))
     
 def pose2d_from_botpose(botpose: list[float]) -> wpimath.geometry.Pose2d:
-    if len(botpose) < 6:
+    if botpose is None or len(botpose) < 6:
         return wpimath.geometry.Pose2d()
         
     # [forward, horizontal, vertical, roll, pitch, yaw, latency, tag count, tag span, average distance, average area]
@@ -26,7 +26,9 @@ def pose2d_from_botpose(botpose: list[float]) -> wpimath.geometry.Pose2d:
 
     return wpimath.geometry.Pose2d(forward, horizontal, wpimath.units.degreesToRadians(rotation))
 
-def is_pose2d_zero(pose: wpimath.geometry.Pose2d):
+def is_pose2d_zero(pose: wpimath.geometry.Pose2d) -> bool:
+    if pose is None:
+        return False
     return pose.X() == 0 and pose.Y() == 0 and pose.rotation().degrees() == 0
 
 class SmoothPosition(object):
@@ -78,6 +80,9 @@ class SmoothPosition(object):
         return wpimath.geometry.Pose2d(avgx, avgy, avgr)
     
 def correct_target_pose(pose : wpimath.geometry.Pose2d) -> wpimath.geometry.Pose2d:
+    if pose is None:
+        return pose
+    
     r = -1 * pose.rotation().degrees()
     rotation = wpimath.geometry.Rotation2d.fromDegrees(r)
     horizontal = -1 * pose.Y()
