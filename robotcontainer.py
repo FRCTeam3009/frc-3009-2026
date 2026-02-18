@@ -269,6 +269,8 @@ class RobotContainer:
         # Then it can start timers to determine which field is currently active.
         # We can publish the timer data too for countdown info.
         # Test it with the full practice mode countdown.
+        # 
+        # https://docs.wpilib.org/en/stable/docs/yearly-overview/2026-game-data.html
         #
         # wpilib.DriverStation.getGameSpecificMessage()
 
