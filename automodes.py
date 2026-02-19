@@ -121,7 +121,17 @@ def move_shoot_left(
     cmds.addCommands(shoot_fuel(shooter).withTimeout(5.0))
     return cmds
 
-
+def blue_climb(
+        climber: subsystems.climber.Climber,
+    )
+    cmds = commands2.SequentialCommandGroup()
+    cmds.addCommands(drive_to_pose(positions[1])) # change pos to correct pos
+    cmds.addCommands(climb_set_up(climber))
+    pos: Pose2d = positions[1]
+    transform = pos.transformBy(wpimath.geometry.Transform2d(0, 0, 0)) #transform forward to climb
+    cmds.addCommands(drive_to_pose(transform))
+    cmds.addCommands(climb_up(climber))
+    return cmds
 
 def drive_to_pose(position: Pose2d):
     return pathplannerlib.auto.AutoBuilder.pathfindToPose(
