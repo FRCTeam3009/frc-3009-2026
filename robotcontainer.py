@@ -243,6 +243,12 @@ class RobotContainer:
         self.operator_controller.rightTrigger().whileTrue(
             self.shooter.fire_cmd(shoot_speed)
         )
+        
+        def shoot_backwards():
+            return self.shooter.backwards_speed
+        self.operator_controller.leftTrigger().whileTrue(
+            self.shooter.fire_cmd(shoot_backwards)
+        )
 
         self.operator_controller.povUp().whileTrue(
             self.climber.move_cmd(self.climber.climber_speed)

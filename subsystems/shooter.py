@@ -13,6 +13,8 @@ class Shooter(commands2.Subsystem):
 
         self.shooter_speed = 1
 
+        self.backwards_speed = 0.25
+
         self.ntcore_instance = ntcore.NetworkTableInstance.getDefault()
         self.shooter_table = self.ntcore_instance.getTable("Shooter")
         self.shooter_topic = self.shooter_table.getFloatTopic("MotorSpeed")
