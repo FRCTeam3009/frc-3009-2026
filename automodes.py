@@ -12,7 +12,38 @@ from phoenix6 import swerve
 from wpimath.geometry import Rotation2d, Pose2d
 import subsystems.shooter
 import math
+import subsystems.climber
 import subsystems.autoEndHubRB
+
+# Positions for the robot to line up to the April Tags, indexed by April Tag IDs
+positions = {}
+positions[1] = Pose2d(16.44, 1.03, Rotation2d.fromDegrees(-52)) # Red Coral Pickup Left
+positions[2] = Pose2d(16.45, 7.03, Rotation2d.fromDegrees(53)) # Red Coral Pickup Right
+positions[3] = Pose2d(11.48, 7.55, Rotation2d.fromDegrees(90)) # Red side, Blue's Algae
+positions[6] = Pose2d(14.13, 2.23, Rotation2d.fromDegrees(120)) # Red Coral
+positions[7] = Pose2d(14.92, 4.04, Rotation2d.fromDegrees(180)) # Red Coral
+positions[8] = Pose2d(14.00, 5.64, Rotation2d.fromDegrees(-120)) # Red Coral
+positions[9] = Pose2d(12.16, 5.55, Rotation2d.fromDegrees(-60)) # Red Coral right
+positions[10] = Pose2d(11.20, 4.00, Rotation2d.fromDegrees(0)) # Red Coral center
+positions[11] = Pose2d(12.05, 2.14, Rotation2d.fromDegrees(60)) # Red Coral left
+positions[12] = Pose2d(1.15, 0.99, Rotation2d.fromDegrees(-127)) # Blue Coral Pickup Right
+positions[13] = Pose2d(1.17, 7.06, Rotation2d.fromDegrees(127)) # Blue Coral Pickup Left
+positions[16] = Pose2d(6.02, 0.52, Rotation2d.fromDegrees(-90)) # Blue Coral
+positions[17] = Pose2d(3.67, 2.25, Rotation2d.fromDegrees(60)) # Blue Coral 
+positions[18] = Pose2d(2.56, 4.03, Rotation2d.fromDegrees(0)) # Blue Coral
+positions[19] = Pose2d(3.41, 5.59, Rotation2d.fromDegrees(-60)) # Blue Coral
+positions[20] = Pose2d(5.55, 5.73, Rotation2d.fromDegrees(-120)) # Blue Coral left
+positions[21] = Pose2d(6.35, 3.99, Rotation2d.fromDegrees(180)) # Blue Coral center
+positions[22] = Pose2d(5.68, 2.14, Rotation2d.fromDegrees(120)) # Blue Coral right
+
+# closer
+positions[23] = Pose2d(11.76, 4.21, Rotation2d.fromDegrees(0)) #red
+positions[24] = Pose2d(5.79, 3.87, Rotation2d.fromDegrees(180)) #blue
+positions[25] = Pose2d(5.00, 5.27, Rotation2d.fromDegrees(-120)) #blueleft
+positions[26] = Pose2d(5.00, 2.85, Rotation2d.fromDegrees(120)) #blue right
+positions[27] = Pose2d(12.55, 2.82, Rotation2d.fromDegrees(60)) #red left
+positions[28] = Pose2d(12.57, 5.24, Rotation2d.fromDegrees(-60)) #red right
+
 
 auto_movement = 1
 # side_start is middle of the ramp
@@ -92,6 +123,18 @@ def move_shoot_left(
     cmds.addCommands(shoot_fuel(shooter).withTimeout(5.0))
     return cmds
 
+def blue_climb(
+        climber: subsystems.climber.Climber,
+    )
+    cmds = commands2.SequentialCommandGroup()
+    cmds.addCommands(drive_to_pose(positions[1])) # change pos to correct pos
+    cmds.addCommands(climb_set_up(climber))
+    pos: Pose2d = positions[1]
+    transform = pos.transformBy(wpimath.geometry.Transform2d(0, 0, 0)) #transform forward to climb
+    cmds.addCommands(drive_to_pose(transform))
+    cmds.addCommands(climb_up(climber))
+    return cmds
+
 def drive_to_pose(position: Pose2d):
     return pathplannerlib.auto.AutoBuilder.pathfindToPose(
             position,
@@ -103,6 +146,12 @@ def shoot_fuel(shooter: subsystems.shooter.Shooter):
     def shooter_speed():
         return shooter.shooter_speed
     return shooter.fire_cmd(shooter_speed)
+
+def climb_up(climber: subsystems.climber.Climber):
+    return climber.upsies()
+
+def climb_set_up(climber: subsystems.climber.Climber):
+    return climber.move_cmd(climber.climber_speed)
 
 class AutoDashboard():
     AUTO_SIT = "sit"

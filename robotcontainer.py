@@ -243,6 +243,12 @@ class RobotContainer:
         self.operator_controller.rightTrigger().whileTrue(
             self.shooter.fire_cmd(shoot_speed)
         )
+        
+        def shoot_backwards():
+            return self.shooter.backwards_speed
+        self.operator_controller.leftTrigger().whileTrue(
+            self.shooter.fire_cmd(shoot_backwards)
+        )
 
         self.operator_controller.povUp().whileTrue(
             self.climber.move_cmd(self.climber.climber_speed)
@@ -269,6 +275,8 @@ class RobotContainer:
         # Then it can start timers to determine which field is currently active.
         # We can publish the timer data too for countdown info.
         # Test it with the full practice mode countdown.
+        # 
+        # https://docs.wpilib.org/en/stable/docs/yearly-overview/2026-game-data.html
         #
         # wpilib.DriverStation.getGameSpecificMessage()
 
