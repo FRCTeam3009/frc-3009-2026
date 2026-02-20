@@ -12,6 +12,7 @@ from phoenix6 import swerve
 from wpimath.geometry import Rotation2d, Pose2d
 import subsystems.shooter
 import math
+import subsystems.autoEndHubRB
 
 auto_movement = 1
 # side_start is middle of the ramp
@@ -129,11 +130,20 @@ class AutoDashboard():
         self.selected_publisher = self.selectedtopic.publish()
         self.selected_publisher.set("sit")
         self.selected_subscriber = self.selectedtopic.subscribe("sit")
-        self.current_auto = self.selected_subscriber.get()        
+        self.current_auto = self.selected_subscriber.get() 
+
+        self.hubActiveTable = self.nt_instance.getTable("hub")
+        self.HubActivePublish_topic = self.hubActiveTable.getBooleanTopic("hubActive")
+        self.HubActivePublish = self.HubActivePublish_topic.publish()
+        self.HubActivePublish.set(False)       
 
     def update(self):
         self.options_publisher.set(list(self.auto_mode_list))
         self.current_auto = self.selected_subscriber.get()
+        hubState = subsystems.autoEndHubRB.is_hub_active()
+        self.HubActivePublish.set(hubState)
+
+
 
     def get_current_auto_builder(self, drivetrain, shooter):
         if self.current_auto == AutoDashboard.AUTO_NOOB_FORWARD:
