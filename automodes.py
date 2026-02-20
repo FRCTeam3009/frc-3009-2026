@@ -50,18 +50,18 @@ auto_movement = 1
 side_start = 0.927
 speed_auto = 0.50
 
-def auto_move_back():
+def auto_move_back() -> float:
     return math.sqrt(math.pow(auto_movement, 2) - math.pow(side_start, 2))
 
 back_move_sideways = auto_move_back()
 
-def get_rotation():
+def get_rotation() -> float:
     print(math.degrees(math.asin(side_start / auto_movement)))
     return math.asin(side_start / auto_movement)
 
 rot_auto = get_rotation()
 
-def start_pose(drivetrain: subsystems.command_swerve_drivetrain.CommandSwerveDrivetrain):
+def start_pose(drivetrain: subsystems.command_swerve_drivetrain.CommandSwerveDrivetrain) -> Pose2d:
     starting_position = Pose2d(5, 5, 0)
     drivetrain.reset_pose(starting_position)
     return starting_position
@@ -75,7 +75,7 @@ class AutoCommand():
         self.type = type
         self.april_tag_id = aprtag
 
-def pathplanner_constraints(): 
+def pathplanner_constraints() -> pathplannerlib.path.PathConstraints: 
     # Create the constraints to use while pathfinding
     return pathplannerlib.path.PathConstraints(
         2.0,
@@ -125,7 +125,7 @@ def move_shoot_left(
 
 def blue_climb(
         climber: subsystems.climber.Climber,
-    ):
+    ) -> commands2.Command:
     cmds = commands2.SequentialCommandGroup()
     cmds.addCommands(drive_to_pose(positions[1])) # change pos to correct pos
     cmds.addCommands(climb_set_up(climber))
@@ -135,22 +135,22 @@ def blue_climb(
     cmds.addCommands(climb_up(climber))
     return cmds
 
-def drive_to_pose(position: Pose2d):
+def drive_to_pose(position: Pose2d) -> commands2.Command:
     return pathplannerlib.auto.AutoBuilder.pathfindToPose(
             position,
             pathplanner_constraints(),
             0.0,
         )
 
-def shoot_fuel(shooter: subsystems.shooter.Shooter):
+def shoot_fuel(shooter: subsystems.shooter.Shooter) -> commands2.Command:
     def shooter_speed():
         return shooter.shooter_speed
     return shooter.fire_cmd(shooter_speed)
 
-def climb_up(climber: subsystems.climber.Climber):
+def climb_up(climber: subsystems.climber.Climber) -> commands2.Command:
     return climber.upsies()
 
-def climb_set_up(climber: subsystems.climber.Climber):
+def climb_set_up(climber: subsystems.climber.Climber) -> commands2.Command:
     return climber.move_cmd(climber.climber_speed)
 
 class AutoDashboard():
@@ -181,18 +181,16 @@ class AutoDashboard():
         self.selected_subscriber = self.selectedtopic.subscribe("sit")
         self.current_auto = self.selected_subscriber.get() 
 
-        self.hubActiveTable = self.nt_instance.getTable("hub")
-        self.HubActivePublish_topic = self.hubActiveTable.getBooleanTopic("hubActive")
-        self.HubActivePublish = self.HubActivePublish_topic.publish()
-        self.HubActivePublish.set(False)       
+        self.hub_active_table = self.nt_instance.getTable("hub")
+        self.hub_active_publish_topic = self.hub_active_table.getBooleanTopic("hubActive")
+        self.hub_active_publish = self.hub_active_publish_topic.publish()
+        self.hub_active_publish.set(False)       
 
     def update(self):
         self.options_publisher.set(list(self.auto_mode_list))
         self.current_auto = self.selected_subscriber.get()
         hubState = subsystems.autoEndHubRB.is_hub_active()
-        self.HubActivePublish.set(hubState)
-
-
+        self.hub_active_publish.set(hubState)
 
     def get_current_auto_builder(self, drivetrain, shooter):
         if self.current_auto == AutoDashboard.AUTO_NOOB_FORWARD:
