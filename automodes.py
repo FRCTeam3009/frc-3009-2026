@@ -125,7 +125,7 @@ def move_shoot_left(
 
 def blue_climb(
         climber: subsystems.climber.Climber,
-    )
+    ):
     cmds = commands2.SequentialCommandGroup()
     cmds.addCommands(drive_to_pose(positions[1])) # change pos to correct pos
     cmds.addCommands(climb_set_up(climber))

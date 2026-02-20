@@ -11,6 +11,7 @@ turn_back_right = 23
 
 shooter = 30
 climber = 31
+ramp = 32
 
 intake = 25
 
