@@ -14,6 +14,7 @@ class Intake(commands2.Subsystem):
         self.IntakeMotor = rev.SparkMax(can_ids.intake, rev.SparkLowLevel.MotorType.kBrushless)
         self.IntakeMotorSim = rev.SparkSim(self.IntakeMotor, wpimath.system.plant.DCMotor.NEO(1))
 
+        # States: -1 = default, 0 = retracting, 1 = deploying
         self.deploying = -1
 
         intake_motor_speed = -1
@@ -64,11 +65,16 @@ class InNOutCommand(commands2.Command):
 
     def execute(self):
         self.UpdateStates()
+        if self.intake.deploying != -1:
+            # IsFinished will handle the final transition.
+            return
         if self.horizontal_state == self.forward and self.vertical_state == self.forward:
+            # If deployed, then retract. Start by pulling up first.
             self.intake.VerticalToggle()
             self.timer.start()
             self.intake.deploying = 0
         elif self.horizontal_state == self.backward and self.vertical_state == self.backward:
+            # If retracted, then deploy. Start by pushing out first.
             self.intake.HorizontalToggle()
             self.timer.start()
             self.intake.deploying = 1
@@ -76,11 +82,15 @@ class InNOutCommand(commands2.Command):
     def isFinished(self) -> bool:
         self.UpdateStates()
         wait_time = self.timer.hasElapsed(self.intake.timer_subscribe.get())
+        print("PENGUINS - " + str(wait_time) + " " + str(self.intake.timer_subscribe.get()))
         if self.horizontal_state == self.forward and self.vertical_state == self.backward and wait_time:
+            # If we're in-between states and enough time has passed, then finish the movement.
             if self.intake.deploying == 1:
+                # Finish deploying by pulling down.
                 self.intake.VerticalToggle()
                 return True
             elif self.intake.deploying == 0:
+                # Finish retracting by pulling in.
                 self.intake.HorizontalToggle()
                 return True
         return False
