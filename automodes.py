@@ -18,9 +18,11 @@ import subsystems.autoEndHubRB
 # Positions for the robot to line up to the April Tags, indexed by April Tag IDs
 positions = {}
 positions[1] = Pose2d(1.694, 3.317, Rotation2d.fromDegrees(0)) # Blue Climb Right (drive perspective)
-positions[2] = Pose2d(16.45, 7.03, Rotation2d.fromDegrees(53)) # Red Coral Pickup Right
-positions[3] = Pose2d(11.48, 7.55, Rotation2d.fromDegrees(90)) # Red side, Blue's Algae
-positions[6] = Pose2d(14.13, 2.23, Rotation2d.fromDegrees(120)) # Red Coral
+positions[2] = Pose2d(1.694, 4.174, Rotation2d.fromDegrees(0)) # Blue Climb Left
+positions[3] = Pose2d(14.846, 3.895, Rotation2d.fromDegrees(180)) # Red Climb Left
+positions[4] = Pose2d(14.846, 4.752, Rotation2d.fromDegrees(180)) # Red Climb Right
+
+
 positions[7] = Pose2d(14.92, 4.04, Rotation2d.fromDegrees(180)) # Red Coral
 positions[8] = Pose2d(14.00, 5.64, Rotation2d.fromDegrees(-120)) # Red Coral
 positions[9] = Pose2d(12.16, 5.55, Rotation2d.fromDegrees(-60)) # Red Coral right
@@ -135,6 +137,42 @@ def blue_climb_right(
     cmds.addCommands(climb_up(climber))
     return cmds
 
+def blue_climb_left(
+        climber: subsystems.climber.Climber,
+    ) -> commands2.Command:
+    cmds = commands2.SequentialCommandGroup()
+    cmds.addCommands(drive_to_pose(positions[2]))
+    cmds.addCommands(climb_set_up(climber))
+    pos: Pose2d = positions[2]
+    transform = pos.transformBy(wpimath.geometry.Transform2d(-0.2032, 0, 0))
+    cmds.addCommands(drive_to_pose(transform))
+    cmds.addCommands(climb_up(climber))
+    return cmds
+
+def red_climb_left(
+        climber: subsystems.climber.Climber,
+    ) -> commands2.Command:
+    cmds = commands2.SequentialCommandGroup()
+    cmds.addCommands(drive_to_pose(positions[3]))
+    cmds.addCommands(climb_set_up(climber))
+    pos: Pose2d = positions[3]
+    transform = pos.transformBy(wpimath.geometry.Transform2d(0.2032, 0, 0))
+    cmds.addCommands(drive_to_pose(transform))
+    cmds.addCommands(climb_up(climber))
+    return cmds
+
+def red_climb_right(
+        climber: subsystems.climber.Climber,
+    ) -> commands2.Command:
+    cmds = commands2.SequentialCommandGroup()
+    cmds.addCommands(drive_to_pose(positions[4]))
+    cmds.addCommands(climb_set_up(climber))
+    pos: Pose2d = positions[4]
+    transform = pos.transformBy(wpimath.geometry.Transform2d(0.2032, 0, 0))
+    cmds.addCommands(drive_to_pose(transform))
+    cmds.addCommands(climb_up(climber))
+    return cmds
+
 def drive_to_pose(position: Pose2d) -> commands2.Command:
     return pathplannerlib.auto.AutoBuilder.pathfindToPose(
             position,
@@ -159,7 +197,10 @@ class AutoDashboard():
     AUTO_MOVE_SHOOT_CENTER = "move_shoot_center"
     AUTO_MOVE_SHOOT_LEFT = "move_shoot_left"
     AUTO_MOVE_SHOOT_RIGHT = "move_shoot_right"
-    AUTO_CLIMB_RIGHT = "climb_right"
+    AUTO_CLIMB_RIGHT_BLUE = "climb_right_blue"
+    AUTO_CLIMB_LEFT_BLUE = "climb_left_blue"
+    AUTO_CLIMB_RIGHT_RED = "climb_right_red"
+    AUTO_CLIMB_LEFT_RED = "climb_left_red"
 
     auto_mode_list = [
         AUTO_SIT,
@@ -167,7 +208,10 @@ class AutoDashboard():
         AUTO_MOVE_SHOOT_CENTER,
         AUTO_MOVE_SHOOT_LEFT,
         AUTO_MOVE_SHOOT_RIGHT,
-        AUTO_CLIMB_RIGHT,
+        AUTO_CLIMB_RIGHT_BLUE,
+        AUTO_CLIMB_LEFT_BLUE,
+        AUTO_CLIMB_RIGHT_RED,
+        AUTO_CLIMB_LEFT_RED
     ]
             
     def __init__(self):
@@ -219,8 +263,14 @@ class AutoDashboard():
             return move_shoot_left(shooter, drivetrain)
         elif self.current_auto == AutoDashboard.AUTO_MOVE_SHOOT_RIGHT:
             return move_shoot_right(shooter, drivetrain)
-        elif self.current_auto == AutoDashboard.AUTO_CLIMB_RIGHT:
+        elif self.current_auto == AutoDashboard.AUTO_CLIMB_RIGHT_BLUE:
             return blue_climb_right(climber)
+        elif self.current_auto == AutoDashboard.AUTO_CLIMB_LEFT_BLUE:
+            return blue_climb_left(climber)
+        elif self.current_auto == AutoDashboard.AUTO_CLIMB_RIGHT_RED:
+            return red_climb_right(climber)
+        elif self.current_auto == AutoDashboard.AUTO_CLIMB_LEFT_RED:
+            return red_climb_left(climber)
         else:
             return sit()
     
