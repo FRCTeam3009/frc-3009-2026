@@ -17,7 +17,7 @@ import subsystems.autoEndHubRB
 
 # Positions for the robot to line up to the April Tags, indexed by April Tag IDs
 positions = {}
-positions[1] = Pose2d(16.44, 1.03, Rotation2d.fromDegrees(-52)) # Red Coral Pickup Left
+positions[1] = Pose2d(1.694, 3.317, Rotation2d.fromDegrees(0)) # Blue Climb Right (drive perspective)
 positions[2] = Pose2d(16.45, 7.03, Rotation2d.fromDegrees(53)) # Red Coral Pickup Right
 positions[3] = Pose2d(11.48, 7.55, Rotation2d.fromDegrees(90)) # Red side, Blue's Algae
 positions[6] = Pose2d(14.13, 2.23, Rotation2d.fromDegrees(120)) # Red Coral
@@ -123,14 +123,14 @@ def move_shoot_left(
     cmds.addCommands(shoot_fuel(shooter).withTimeout(5.0))
     return cmds
 
-def blue_climb(
+def blue_climb_right(
         climber: subsystems.climber.Climber,
     ) -> commands2.Command:
     cmds = commands2.SequentialCommandGroup()
-    cmds.addCommands(drive_to_pose(positions[1])) # change pos to correct pos
+    cmds.addCommands(drive_to_pose(positions[1]))
     cmds.addCommands(climb_set_up(climber))
     pos: Pose2d = positions[1]
-    transform = pos.transformBy(wpimath.geometry.Transform2d(0, 0, 0)) #transform forward to climb
+    transform = pos.transformBy(wpimath.geometry.Transform2d(-0.2032, 0, 0))
     cmds.addCommands(drive_to_pose(transform))
     cmds.addCommands(climb_up(climber))
     return cmds
@@ -159,6 +159,7 @@ class AutoDashboard():
     AUTO_MOVE_SHOOT_CENTER = "move_shoot_center"
     AUTO_MOVE_SHOOT_LEFT = "move_shoot_left"
     AUTO_MOVE_SHOOT_RIGHT = "move_shoot_right"
+    AUTO_CLIMB_RIGHT = "climb_right"
 
     auto_mode_list = [
         AUTO_SIT,
@@ -166,6 +167,7 @@ class AutoDashboard():
         AUTO_MOVE_SHOOT_CENTER,
         AUTO_MOVE_SHOOT_LEFT,
         AUTO_MOVE_SHOOT_RIGHT,
+        AUTO_CLIMB_RIGHT,
     ]
             
     def __init__(self):
@@ -208,7 +210,7 @@ class AutoDashboard():
         secondsStr = f"{seconds:.2f} Seconds"
         self.hub_timer_publish.set(secondsStr)
 
-    def get_current_auto_builder(self, drivetrain, shooter):
+    def get_current_auto_builder(self, drivetrain, shooter, climber):
         if self.current_auto == AutoDashboard.AUTO_NOOB_FORWARD:
             return noob_auto_drive_straight_forward(drivetrain)
         elif self.current_auto == AutoDashboard.AUTO_MOVE_SHOOT_CENTER:
@@ -217,6 +219,8 @@ class AutoDashboard():
             return move_shoot_left(shooter, drivetrain)
         elif self.current_auto == AutoDashboard.AUTO_MOVE_SHOOT_RIGHT:
             return move_shoot_right(shooter, drivetrain)
+        elif self.current_auto == AutoDashboard.AUTO_CLIMB_RIGHT:
+            return blue_climb_right(climber)
         else:
             return sit()
     
