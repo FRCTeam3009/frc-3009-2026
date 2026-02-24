@@ -15,6 +15,7 @@ import math
 import subsystems.climber
 import subsystems.autoEndHubRB
 
+climber_offset = 0.2032
 # Positions for the robot to line up to the April Tags, indexed by April Tag IDs
 positions = {}
 positions[1] = Pose2d(1.694, 3.317, Rotation2d.fromDegrees(0)) # Blue Climb Right (drive perspective)
@@ -132,7 +133,7 @@ def blue_climb_right(
     cmds.addCommands(drive_to_pose(positions[1]))
     cmds.addCommands(climb_set_up(climber))
     pos: Pose2d = positions[1]
-    transform = pos.transformBy(wpimath.geometry.Transform2d(-0.2032, 0, 0))
+    transform = pos.transformBy(wpimath.geometry.Transform2d(-1 * climber_offset, 0, 0))
     cmds.addCommands(drive_to_pose(transform))
     cmds.addCommands(climb_up(climber))
     return cmds
@@ -144,7 +145,7 @@ def blue_climb_left(
     cmds.addCommands(drive_to_pose(positions[2]))
     cmds.addCommands(climb_set_up(climber))
     pos: Pose2d = positions[2]
-    transform = pos.transformBy(wpimath.geometry.Transform2d(-0.2032, 0, 0))
+    transform = pos.transformBy(wpimath.geometry.Transform2d(-1 * climber_offset, 0, 0))
     cmds.addCommands(drive_to_pose(transform))
     cmds.addCommands(climb_up(climber))
     return cmds
@@ -156,7 +157,7 @@ def red_climb_left(
     cmds.addCommands(drive_to_pose(positions[3]))
     cmds.addCommands(climb_set_up(climber))
     pos: Pose2d = positions[3]
-    transform = pos.transformBy(wpimath.geometry.Transform2d(0.2032, 0, 0))
+    transform = pos.transformBy(wpimath.geometry.Transform2d(climber_offset, 0, 0))
     cmds.addCommands(drive_to_pose(transform))
     cmds.addCommands(climb_up(climber))
     return cmds
@@ -168,7 +169,7 @@ def red_climb_right(
     cmds.addCommands(drive_to_pose(positions[4]))
     cmds.addCommands(climb_set_up(climber))
     pos: Pose2d = positions[4]
-    transform = pos.transformBy(wpimath.geometry.Transform2d(0.2032, 0, 0))
+    transform = pos.transformBy(wpimath.geometry.Transform2d(climber_offset, 0, 0))
     cmds.addCommands(drive_to_pose(transform))
     cmds.addCommands(climb_up(climber))
     return cmds
