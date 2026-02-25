@@ -252,7 +252,8 @@ class AutoDashboard():
             self.hub_active_word_publish.set("HOLD")
 
         match_time = wpilib.DriverStation.getMatchTime()
-        seconds = subsystems.autoEndHubRB.timeremaining(match_time)
+        is_auto_enabled = wpilib.DriverStation.isAutonomousEnabled()
+        seconds = subsystems.autoEndHubRB.timeremaining(match_time, is_auto_enabled)
         secondsStr = f"{seconds:.2f} Seconds"
         self.hub_timer_publish.set(secondsStr)
 

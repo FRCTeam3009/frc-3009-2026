@@ -12,7 +12,7 @@ def is_red_active_after_auto() -> bool:
             # No or invalid game data, assume hub is active.
             return True
 
-def RHubIsActiveAftAut():
+def is_our_hub_active_after_auto():
     alliance = DriverStation.getAlliance()
     red_active = is_red_active_after_auto()
     if alliance == DriverStation.Alliance.kRed and red_active:
@@ -40,7 +40,7 @@ def is_hub_active() -> bool:
     match_time = DriverStation.getMatchTime()
 
     # Shift 1 is active for blue if red won auto, or red if blue won auto.
-    shift1_active = RHubIsActiveAftAut()
+    shift1_active = is_our_hub_active_after_auto()
 
     if match_time > 130:
         return True  # Transition shift, hub is active
@@ -59,8 +59,8 @@ def is_hub_active() -> bool:
     else:
         return True  # End game, hub always active
     
-def timeremaining(currenttime: float):
-    if DriverStation.isAutonomousEnabled():
+def timeremaining(currenttime: float, is_auto_enabled: bool):
+    if is_auto_enabled:
         return currenttime
 
     if currenttime > 130:

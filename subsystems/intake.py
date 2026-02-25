@@ -82,7 +82,6 @@ class InNOutCommand(commands2.Command):
     def isFinished(self) -> bool:
         self.UpdateStates()
         wait_time = self.timer.hasElapsed(self.intake.timer_subscribe.get())
-        print("PENGUINS - " + str(wait_time) + " " + str(self.intake.timer_subscribe.get()))
         if self.horizontal_state == self.forward and self.vertical_state == self.backward and wait_time:
             # If we're in-between states and enough time has passed, then finish the movement.
             if self.intake.deploying == 1:
