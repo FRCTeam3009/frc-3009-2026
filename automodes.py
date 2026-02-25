@@ -251,7 +251,8 @@ class AutoDashboard():
         else:
             self.hub_active_word_publish.set("HOLD")
 
-        seconds = 20.001234 # TODO make a function to calculate how much time is remaining.
+        match_time = wpilib.DriverStation.getMatchTime()
+        seconds = subsystems.autoEndHubRB.timeremaining(match_time)
         secondsStr = f"{seconds:.2f} Seconds"
         self.hub_timer_publish.set(secondsStr)
 
@@ -296,3 +297,4 @@ class WaitCommand(commands2.Command):
         if self.timer.hasElapsed(9):
             return True
         return False
+    

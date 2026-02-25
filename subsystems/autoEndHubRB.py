@@ -58,3 +58,20 @@ def is_hub_active() -> bool:
         return not shift1_active
     else:
         return True  # End game, hub always active
+    
+def timeremaining(currenttime: float):
+    if DriverStation.isAutonomousEnabled():
+        return currenttime
+
+    if currenttime > 130:
+        return currenttime - 130
+    elif currenttime > 105:
+        return currenttime - 105
+    elif currenttime > 80:
+        return currenttime - 80
+    elif currenttime > 55:
+        return currenttime - 55
+    elif currenttime > 30:
+        return currenttime - 30
+    else:
+        return currenttime
