@@ -104,7 +104,7 @@ class Limelight(object):
     def telemetry(self):
         pose = self.target_poses[19].get_average_pose()
         pose = subsystems.limelight_positions.correct_target_pose(pose)
-        bot_pose_target_var : list[typing.SupportsFloat]
+        bot_pose_target_var : list[typing.SupportsFloat | typing.SupportsIndex]
         bot_pose_target_var = [wpimath.units.metersToInches(pose.X()), 
                                     wpimath.units.metersToInches(pose.Y()), 
                                     pose.rotation().degrees()]

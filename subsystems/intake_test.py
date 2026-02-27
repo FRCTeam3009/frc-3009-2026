@@ -1,7 +1,6 @@
 import subsystems.intake
 import wpilib
 import time
-import commands2
 
 def test_innoutcommand():
     forward =  wpilib.DoubleSolenoid.Value.kForward

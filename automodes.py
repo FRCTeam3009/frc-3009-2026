@@ -14,15 +14,28 @@ import subsystems.shooter
 import math
 import subsystems.climber
 import subsystems.autoEndHubRB
+import typing
 
+auto_movement = 1
+# side_start is middle of the ramp
+side_start = 0.927
+speed_auto = 0.50
 climber_offset = 0.2032
+
 # Positions for the robot to line up to the April Tags, indexed by April Tag IDs
-positions = {}
-positions[1] = Pose2d(1.694, 3.317, Rotation2d.fromDegrees(0)) # Blue Climb Right (drive perspective)
+positions: typing.Dict[int, Pose2d] = {}
+# Left and Right are relative to the driver station looking inward towards the field
+# The Origin (0,0) is the Blue Right corner. X = long, Y = short
+positions[1] = Pose2d(1.694, 3.317, Rotation2d.fromDegrees(0)) # Blue Climb Right (driver perspective)
 positions[2] = Pose2d(1.694, 4.174, Rotation2d.fromDegrees(0)) # Blue Climb Left
 positions[3] = Pose2d(14.846, 3.895, Rotation2d.fromDegrees(180)) # Red Climb Left
 positions[4] = Pose2d(14.846, 4.752, Rotation2d.fromDegrees(180)) # Red Climb Right
+# TODO you can use should_mirror() and mirror_position() to flip, then just define the Blue sides.
 
+# Manual center start pose when not trusting the limelights
+positions[5] = Pose2d(wpimath.units.inchesToMeters(140),
+                      wpimath.units.inchesToMeters(156.06),
+                      Rotation2d.fromDegrees(0))
 
 positions[7] = Pose2d(14.92, 4.04, Rotation2d.fromDegrees(180)) # Red Coral
 positions[8] = Pose2d(14.00, 5.64, Rotation2d.fromDegrees(-120)) # Red Coral
@@ -47,11 +60,24 @@ positions[26] = Pose2d(5.00, 2.85, Rotation2d.fromDegrees(120)) #blue right
 positions[27] = Pose2d(12.55, 2.82, Rotation2d.fromDegrees(60)) #red left
 positions[28] = Pose2d(12.57, 5.24, Rotation2d.fromDegrees(-60)) #red right
 
+# We'll assign positions based on the Blue side.
+# If we're on the Red side, we can use mirror_position() to flip.
+def should_mirror() -> bool:
+    return wpilib.DriverStation.getAlliance() != wpilib.DriverStation.Alliance.kBlue
 
-auto_movement = 1
-# side_start is middle of the ramp
-side_start = 0.927
-speed_auto = 0.50
+def mirror_position(input: Pose2d) -> Pose2d:
+    maxX = wpimath.units.inchesToMeters(650.12)
+    maxY = wpimath.units.inchesToMeters(316.64)
+
+    # If the position is invalid, just return it without mirroring.
+    if input.X() < 0 or input.Y() < 0 or input.X() > maxX or input.Y() > maxY:
+        return input
+
+    return Pose2d(
+        maxX - input.X(),
+        maxY - input.Y(),
+        wpimath.units.degreesToRadians(180) + input.rotation().radians(),
+    )
 
 def auto_move_back() -> float:
     return math.sqrt(math.pow(auto_movement, 2) - math.pow(side_start, 2))
@@ -59,15 +85,21 @@ def auto_move_back() -> float:
 back_move_sideways = auto_move_back()
 
 def get_rotation() -> float:
-    print(math.degrees(math.asin(side_start / auto_movement)))
     return math.asin(side_start / auto_movement)
 
 rot_auto = get_rotation()
 
-def start_pose(drivetrain: subsystems.command_swerve_drivetrain.CommandSwerveDrivetrain) -> Pose2d:
-    starting_position = Pose2d(5, 5, 0)
-    drivetrain.reset_pose(starting_position)
-    return starting_position
+# start_pose is used for the auto modes that don't use the limelights.
+# This gives us an estimate starting position.
+def start_pose(drivetrain: subsystems.command_swerve_drivetrain.CommandSwerveDrivetrain, offset: float) -> Pose2d:
+    starting_position = positions[5]
+    sp = starting_position.transformBy(wpimath.geometry.Transform2d(0, offset, 0))
+
+    if should_mirror():
+        sp = mirror_position(sp)
+    drivetrain.reset_pose(sp)
+
+    return sp
 
 class AutoCommand():
     drive_to_pose = 1
@@ -93,34 +125,43 @@ def noob_auto_drive_straight_forward(drivetrain: subsystems.command_swerve_drive
 def sit() -> commands2.Command:
     return commands2.Command()
 
+# This auto does not use the limelights.
 def move_shoot_center(
         shooter: subsystems.shooter.Shooter,
         drivetrain: subsystems.command_swerve_drivetrain.CommandSwerveDrivetrain
     ) -> commands2.Command:
-    sp = start_pose(drivetrain)
+    sp = start_pose(drivetrain, 0)
     transform = sp.transformBy(wpimath.geometry.Transform2d(-auto_movement, 0, 0))
     cmds = commands2.SequentialCommandGroup()
     cmds.addCommands(drive_to_pose(transform))
     cmds.addCommands(shoot_fuel(shooter).withTimeout(5.0))
     return cmds
 
+# This auto does not use the limelights.
 def move_shoot_right(
         shooter: subsystems.shooter.Shooter,
         drivetrain: subsystems.command_swerve_drivetrain.CommandSwerveDrivetrain
     ) -> commands2.Command:
-    sp = start_pose(drivetrain)
+    sp = start_pose(drivetrain, side_start)
     transform = sp.transformBy(wpimath.geometry.Transform2d(-auto_movement, 0, rot_auto))
     cmds = commands2.SequentialCommandGroup()
     cmds.addCommands(drive_to_pose(transform))
     cmds.addCommands(shoot_fuel(shooter).withTimeout(5.0))
     return cmds
 
+# This auto does not use the limelights.
 def move_shoot_left(
         shooter: subsystems.shooter.Shooter,
         drivetrain: subsystems.command_swerve_drivetrain.CommandSwerveDrivetrain
     ) -> commands2.Command:
-    sp = start_pose(drivetrain)
+
+    side = 1.0
+    if wpilib.DriverStation.getAlliance() == wpilib.DriverStation.Alliance.kBlue:
+        side = -1.0
+
+    sp = start_pose(drivetrain, side * side_start)
     transform = sp.transformBy(wpimath.geometry.Transform2d(-auto_movement, 0, -rot_auto))
+
     cmds = commands2.SequentialCommandGroup()
     cmds.addCommands(drive_to_pose(transform))
     cmds.addCommands(shoot_fuel(shooter).withTimeout(5.0))
