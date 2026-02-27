@@ -23,6 +23,8 @@ class MyRobot(commands2.TimedCommandRobot):
         initialization code.
         """
 
+        wpilib.CameraServer.launch("camera.py:main")
+
         self.autonomousCommand: typing.Optional[commands2.Command] = None
 
         # Instantiate our RobotContainer.  This will perform all our button bindings, and put our
