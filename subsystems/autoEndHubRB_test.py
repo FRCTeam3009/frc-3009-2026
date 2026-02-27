@@ -9,6 +9,19 @@ def test_timeremaining():
     output = subsystems.autoEndHubRB.timeremaining(140, False)
     assert(output == 10)
 
+    output = subsystems.autoEndHubRB.timeremaining(110, False)
+    assert(output == 5)
+    
+    output = subsystems.autoEndHubRB.timeremaining(89, False)
+    assert(output == 9)
+
+    output = subsystems.autoEndHubRB.timeremaining(54, False)
+    assert(output == 24)
+
+    output = subsystems.autoEndHubRB.timeremaining(12, False)
+    assert(output == 12)
+
+
 def run_tests():
     test_timeremaining()
 
