@@ -22,9 +22,6 @@ class MyRobot(commands2.TimedCommandRobot):
         This function is run when the robot is first started up and should be used for any
         initialization code.
         """
-
-        wpilib.CameraServer.launch("camera.py:main")
-
         self.autonomousCommand: typing.Optional[commands2.Command] = None
 
         # Instantiate our RobotContainer.  This will perform all our button bindings, and put our
@@ -97,7 +94,6 @@ class MyRobot(commands2.TimedCommandRobot):
 
     def autonomousInit(self) -> None:
         """This autonomous runs the autonomous command selected by your RobotContainer class."""
-        self.container.front_limelight.update_command().schedule()
         self.autonomousCommand = self.container.get_auto_command()
 
         if self.autonomousCommand:

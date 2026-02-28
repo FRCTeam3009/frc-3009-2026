@@ -30,6 +30,14 @@ class Limelight(object):
         self.targetpose_botspacetopic = self.table.getDoubleArrayTopic("targetpose_robotspace")
         self.targetpose_botspacesub = self.targetpose_botspacetopic.subscribe([])
 
+        self.stream_topic = self.table.getDoubleTopic("stream")
+        self.stream_publish = self.stream_topic.publish()
+        # 0 = Side-by-Side
+        # 1 = Picture-in-Picture (secondary small)
+        # 2 = Picture-in-Picture (primary small)
+        self.stream_setting = 0
+        self.stream_publish.set(self.stream_setting)
+
         self.json_topic = self.table.getStringTopic("json")
         self.json_subscribe = self.json_topic.subscribe("")
         self.target_poses = {6: subsystems.limelight_positions.SmoothPosition(),
