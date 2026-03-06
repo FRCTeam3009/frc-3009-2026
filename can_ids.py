@@ -21,3 +21,11 @@ ramp = 42
 intake = 43
 
 pigeon = 44
+
+# neo 4 = 13 (spark)
+# neo 3 = 14 (spark)
+# neo 2 = 11 (spark)
+# neo 1 = 15 (spark)
+# ramp = 42 (spark)
+# shooter = 10 (flex)
+# intake 2 = 12 (spark)
