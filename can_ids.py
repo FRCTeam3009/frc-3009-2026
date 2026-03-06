@@ -1,31 +1,23 @@
 
-drive_front_left = 10
-drive_front_right = 11
-drive_back_left = 12
-drive_back_right = 13
+drive_front_left = 40 # kraken
+drive_front_right = 44 # kraken
+drive_back_left = 43 # kraken
+drive_back_right = 41 # kraken
 
-turn_front_left = 20
-turn_front_right = 21
-turn_back_left = 22
-turn_back_right = 23
+turn_front_left = 11 # spark, neo 2
+turn_front_right = 15 # spark, neo 1
+turn_back_left = 14 # spark, neo 3
+turn_back_right = 13 # spark, neo 4
 
-encoders_front_left = 30
-encoders_front_right = 31
-encoders_back_left = 32
-encoders_back_right = 33
+encoders_front_left = 32
+encoders_front_right = 30
+encoders_back_left = 33
+encoders_back_right = 31
 
-shooter = 40
-climber = 41
-ramp = 42
+shooter = 10 # spark flex
+climber = 35 # talon
+ramp = 42 # spark, the one that loads balls into the shooter
+intake = 7 # talon, the one that picks ball up off the ground
+intake2 = 12 # spark, the one that rolls the flat rollers
 
-intake = 43
-
-pigeon = 44
-
-# neo 4 = 13 (spark)
-# neo 3 = 14 (spark)
-# neo 2 = 11 (spark)
-# neo 1 = 15 (spark)
-# ramp = 42 (spark)
-# shooter = 10 (flex)
-# intake 2 = 12 (spark)
+pigeon = 52
