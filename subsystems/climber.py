@@ -3,6 +3,7 @@ import wpimath.system.plant
 import commands2
 import ntcore
 import can_ids
+import wpilib
 
 SPEED = 1.0
 
@@ -10,6 +11,11 @@ class Climber(commands2.Subsystem):
     def __init__(self):
         self.climber_motor = rev.SparkMax(can_ids.climber, rev.SparkLowLevel.MotorType.kBrushless)
         self.climber_motor_sim = rev.SparkMaxSim(self.climber_motor, wpimath.system.plant.DCMotor.NEO(1))
+
+        self.latches = wpilib.DoubleSolenoid(wpilib.PneumaticsModuleType.REVPH, 4, 5)
+        self.square_pipe = wpilib.DoubleSolenoid(wpilib.PneumaticsModuleType.REVPH, 6, 7)
+        self.latches.set(wpilib.DoubleSolenoid.Value.kReverse)
+        self.square_pipe.set(wpilib.DoubleSolenoid.Value.kReverse)
 
         self.climber_speed = 1.0
 
@@ -43,6 +49,18 @@ class Climber(commands2.Subsystem):
     
     def upsies(self):
         return UpsiesCommand(self)
+    
+    def upper_latch_toggle(self):
+        self.square_pipe.toggle()
+
+    def lower_latch_toggle(self):
+        self.latches.toggle()
+
+    def UpperLatchCmd(self) -> UpperLatchCommand:
+        return UpperLatchCommand(self)
+    
+    def LowerLatchCmd(self) -> LowerLatchCommand:
+        return LowerLatchCommand(self)
 
 class MoveClimberCommand(commands2.Command):
     def __init__(self, climber: Climber, speed: float):
@@ -63,6 +81,22 @@ class MoveClimberCommand(commands2.Command):
 
     def end(self, interrupted: bool):
         self.climber.climber_movement(0)
+
+class UpperLatchCommand(commands2.Command):
+    def __init__(self, climber: Climber):
+        self.climber = climber
+        self.upper_latch = self.climber.square_pipe
+
+    def execute(self):
+        self.climber.upper_latch_toggle()
+
+class LowerLatchCommand(commands2.Command):
+    def __init__(self, climber: Climber):
+        self.climber = climber
+        self.lower_latch = self.climber.latches
+
+    def execute(self):
+        self.climber.lower_latch_toggle()
 
 class UpsiesCommand(commands2.Command):
     def __init__(self, climber: Climber):

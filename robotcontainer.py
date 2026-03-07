@@ -262,9 +262,16 @@ class RobotContainer:
         self.operator_controller.y().whileTrue(
             self.intake.IntakeCmd()
         )
+        self.operator_controller.a().onTrue(
+            self.climber.UpperLatchCmd()
+        )
+        self.operator_controller.x().onTrue(
+            self.climber.LowerLatchCmd()
+        )
         (self.driver_controller.back() & self.driver_controller.start()).whileTrue(
             self.front_limelight.reset_pose_command(self.drivetrain)
         )
+        
     
     def get_auto_command(self) -> commands2.Command:
         """Use this to pass the autonomous command to the main {@link Robot} class.

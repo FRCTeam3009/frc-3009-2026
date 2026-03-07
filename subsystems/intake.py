@@ -7,8 +7,8 @@ import ntcore
 
 class Intake(commands2.Subsystem):
     def __init__(self):
-        self.HorizontalMotion = wpilib.DoubleSolenoid(wpilib.PneumaticsModuleType.CTREPCM, 0, 1)
-        self.VerticalMotion = wpilib.DoubleSolenoid(wpilib.PneumaticsModuleType.CTREPCM, 2, 3)
+        self.HorizontalMotion = wpilib.DoubleSolenoid(wpilib.PneumaticsModuleType.REVPH, 0, 1)
+        self.VerticalMotion = wpilib.DoubleSolenoid(wpilib.PneumaticsModuleType.REVPH, 2, 3)
         self.HorizontalMotion.set(wpilib.DoubleSolenoid.Value.kReverse)
         self.VerticalMotion.set(wpilib.DoubleSolenoid.Value.kReverse)
         self.IntakeMotor = rev.SparkMax(can_ids.intake, rev.SparkLowLevel.MotorType.kBrushless)
