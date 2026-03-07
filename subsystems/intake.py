@@ -4,6 +4,7 @@ import rev
 import wpimath.system.plant
 import can_ids
 import ntcore
+import phoenix6
 
 class Intake(commands2.Subsystem):
     def __init__(self):
@@ -11,8 +12,7 @@ class Intake(commands2.Subsystem):
         self.VerticalMotion = wpilib.DoubleSolenoid(wpilib.PneumaticsModuleType.REVPH, 2, 3)
         self.HorizontalMotion.set(wpilib.DoubleSolenoid.Value.kReverse)
         self.VerticalMotion.set(wpilib.DoubleSolenoid.Value.kReverse)
-        self.IntakeMotor = rev.SparkMax(can_ids.intake, rev.SparkLowLevel.MotorType.kBrushless)
-        self.IntakeMotorSim = rev.SparkSim(self.IntakeMotor, wpimath.system.plant.DCMotor.NEO(1))
+        self.IntakeMotor = phoenix6.hardware.TalonFX(can_ids.intake)
 
         # States: -1 = default, 0 = retracting, 1 = deploying
         self.deploying = -1

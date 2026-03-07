@@ -36,7 +36,7 @@ class Shooter(commands2.Subsystem):
         self.ramp_up_speed_subscribe = self.ramp_up_speed_topic.subscribe(self.ramp_up_speed)
 
         # Multiplier for the speed of the motor that pulls balls out of the hopper into the shooter. (e.g. 0.25)
-        self.ramp_motor_speed = 0.25
+        self.ramp_motor_speed = 0.75
         self.ramp_motor_speed_topic = self.shooter_table.getFloatTopic("ramp_motor_speed")
         self.ramp_motor_speed_publish = self.ramp_motor_speed_topic.publish()
         self.ramp_motor_speed_publish.set(self.ramp_motor_speed)
@@ -63,7 +63,7 @@ class FireCommand(commands2.Command):
         self.shooter.move(self.speed() * shooter_speed)
 
         # Wait until the shooter motor is up to speed before loading balls into it.
-        current_speed = self.shooter.motor.getEncoder().getVelocity()
+        current_speed = -1 * self.shooter.motor.getEncoder().getVelocity()
         ramp_up_speed = self.shooter.ramp_up_speed_subscribe.get()
         ramp_motor_speed = self.shooter.ramp_motor_speed_subscribe.get()
         if current_speed > ramp_up_speed:

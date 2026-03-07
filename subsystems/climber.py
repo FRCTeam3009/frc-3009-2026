@@ -4,13 +4,13 @@ import commands2
 import ntcore
 import can_ids
 import wpilib
+import phoenix6
 
 SPEED = 1.0
 
 class Climber(commands2.Subsystem):
     def __init__(self):
-        self.climber_motor = rev.SparkMax(can_ids.climber, rev.SparkLowLevel.MotorType.kBrushless)
-        self.climber_motor_sim = rev.SparkMaxSim(self.climber_motor, wpimath.system.plant.DCMotor.NEO(1))
+        self.climber_motor = phoenix6.hardware.TalonFX(can_ids.climber)
 
         self.latches = wpilib.DoubleSolenoid(wpilib.PneumaticsModuleType.REVPH, 4, 5)
         self.square_pipe = wpilib.DoubleSolenoid(wpilib.PneumaticsModuleType.REVPH, 6, 7)
@@ -19,8 +19,8 @@ class Climber(commands2.Subsystem):
 
         self.climber_speed = 1.0
 
-        self.upper_limit = 100
-        self.lower_limit = 0
+        self.upper_limit = 0
+        self.lower_limit = -100
         self.auto_limit = 50
 
         self.ntcore_instance = ntcore.NetworkTableInstance.getDefault()
@@ -32,10 +32,9 @@ class Climber(commands2.Subsystem):
 
     def climber_movement(self, speed: float):
         self.climber_motor.set(speed)
-        self.climber_motor_sim.setAppliedOutput(speed)
 
     def get_position(self):
-        return self.climber_motor.getEncoder().getPosition()
+        return self.climber_motor.get_position().value_as_double
     
     #def telemetry(self):
         #positions = [
@@ -73,11 +72,11 @@ class MoveClimberCommand(commands2.Command):
         self.climber.climber_speed = self.climber.motor_speed_subscribe.get()
         self.climber.climber_movement(self.speed * self.climber.climber_speed)
 
-    def isFinished(self) -> bool:
-        if self.climber.climber_motor.getEncoder().getPosition() >= self.upper_limit and self.speed > 0:
+    '''def isFinished(self) -> bool:
+        if self.climber.get_position() >= self.upper_limit and self.speed > 0:
             return True
         else:
-            return False
+            return False'''
 
     def end(self, interrupted: bool):
         self.climber.climber_movement(0)
@@ -108,7 +107,7 @@ class UpsiesCommand(commands2.Command):
         self.climber.climber_movement(-1 * self.climber.climber_speed)
 
     def isFinished(self) -> bool:
-        if self.climber.climber_motor.getEncoder().getPosition() <= self.limit:
+        if self.climber.get_position() <= self.limit:
             return True
         else:
             return False
@@ -122,11 +121,11 @@ class Hold(commands2.Command):
         self.limit = self.climber.auto_limit
 
     def initialize(self):
-        self.pos = self.climber.climber_motor.getEncoder().getPosition()
+        self.pos = self.climber.get_position()
 
     def execute(self):
-        if self.climber.climber_motor.getEncoder().getPosition() < (self.pos - 5):
+        if self.climber.climber_motor.get_position() < (self.pos - 5):
             self.climber.climber_speed = self.climber.motor_speed_subscribe.get()
             self.climber.climber_movement(self.climber.climber_speed * 0.5)
-        if self.climber.climber_motor.getEncoder().getPosition() >= self.pos:
+        if self.climber.climber_motor.get_position() >= self.pos:
             self.climber.climber_movement(0)
