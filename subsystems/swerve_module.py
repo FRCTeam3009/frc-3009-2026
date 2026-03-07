@@ -7,12 +7,18 @@ import swerve_params
 import phoenix6.configs
 import phoenix6.controls
 import ntcore
+import simulation
 
 class SwerveModule():
-    def __init__(self, name: str, drive: int, turn: int, encoder: int, table: ntcore.NetworkTable):
+    def __init__(self, name: str, drive: int, turn: int, encoder: int, encoder_offset: float, table: ntcore.NetworkTable):
         self.drive = phoenix6.hardware.TalonFX(drive)
         self.turn = rev.SparkMax(turn, rev.SparkLowLevel.MotorType.kBrushless)
         self.encoder = phoenix6.hardware.CANcoder(encoder)
+        encoder_config = phoenix6.configs.CANcoderConfiguration()
+        if simulation.is_simulation:
+            encoder_offset = 0.0
+        encoder_config.magnet_sensor.magnet_offset = -1 * encoder_offset
+        self.encoder.configurator.apply(encoder_config)
 
         self.turn_pid = self.turn.getClosedLoopController()
 

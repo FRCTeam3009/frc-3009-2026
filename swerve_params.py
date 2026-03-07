@@ -1,10 +1,10 @@
 import wpimath.units
 import math
 
-encoder_offset_front_left = 0.0
-encoder_offset_front_right = 0.0
-encoder_offset_back_left = 0.0
-encoder_offset_back_right = 0.0
+encoder_offset_front_left = -0.010986
+encoder_offset_front_right = -0.001221
+encoder_offset_back_left = -0.006348
+encoder_offset_back_right = 0.012939
 
 speed: wpimath.units.meters = 4.0
 angular_rate: wpimath.units.radians_per_second = 0.75
