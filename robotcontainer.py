@@ -42,25 +42,6 @@ class RobotContainer:
         )  # 3/4 of a rotation per second max angular velocity
 
         # Setting up bindings for necessary control of the swerve drive platform
-        self._drive = (
-            swerve.requests.FieldCentric()
-            .with_deadband(self._max_speed * 0.001)
-            .with_rotational_deadband(
-                self._max_angular_rate * 0.001
-            )  # Add a 0.1% deadband
-            .with_drive_request_type(
-                swerve.SwerveModule.DriveRequestType.OPEN_LOOP_VOLTAGE
-            )  # Use open-loop control for drive motors
-        )
-        self._brake = swerve.requests.SwerveDriveBrake()
-        self._point = swerve.requests.PointWheelsAt()
-        self._forward_straight = (
-            swerve.requests.RobotCentric()
-            .with_drive_request_type(
-                swerve.SwerveModule.DriveRequestType.OPEN_LOOP_VOLTAGE
-            )
-        )
-
         self.logger = telemetry.Telemetry(self._max_speed)
 
         self.driver_controller = commands2.button.CommandXboxController(0)
@@ -128,21 +109,15 @@ class RobotContainer:
         #
         self.drivetrain.setDefaultCommand(
             # Drivetrain will execute this command periodically
-            self.drivetrain.apply_request(
-                lambda: (
-                    self._drive.with_velocity_x(
-                        -self.driver_controller.getLeftY() * self._max_speed * self.speed_limit
-                    )  # Drive forward with negative Y (forward)
-                    .with_velocity_y(
-                        -self.driver_controller.getLeftX() * self._max_speed * self.speed_limit
-                    )  # Drive left with negative X (left)
-                    .with_rotational_rate(
-                        -self.driver_controller.getRightX() * self._max_angular_rate * self.speed_limit
-                    )  # Drive counterclockwise with negative X (left)
+            self.drivetrain.drive_cmd(
+                    -self.driver_controller.getLeftY() * self._max_speed * self.speed_limit,
+                    -self.driver_controller.getLeftX() * self._max_speed * self.speed_limit,
+                    -self.driver_controller.getRightX() * self._max_angular_rate * self.speed_limit,
                 )
             )
         )
 
+        # Drive Robot-relative for small adjustments with D-pad
         self.driver_controller.povUp().whileTrue(
             self.drivetrain.apply_request(
                 lambda: self._forward_straight
@@ -208,31 +183,9 @@ class RobotContainer:
             )
         )
 
-        # Run SysId routines when holding back/start and X/Y.
-        # Note that each routine should be run exactly once in a single log.
-        (self.driver_controller.back() & self.driver_controller.y()).whileTrue(
-            self.drivetrain.sys_id_dynamic(SysIdRoutine.Direction.kForward)
-        )
-        (self.driver_controller.back() & self.driver_controller.x()).whileTrue(
-            self.drivetrain.sys_id_dynamic(SysIdRoutine.Direction.kReverse)
-        )
-        (self.driver_controller.start() & self.driver_controller.y()).whileTrue(
-            self.drivetrain.sys_id_quasistatic(SysIdRoutine.Direction.kForward)
-        )
-        (self.driver_controller.start() & self.driver_controller.x()).whileTrue(
-            self.drivetrain.sys_id_quasistatic(SysIdRoutine.Direction.kReverse)
-        )
-
         # reset the field-centric heading on left bumper press
-        def field_centric():
-            return self.drivetrain.seed_field_centric()
-        self.driver_controller.leftBumper().onTrue(
-            self.drivetrain.runOnce(field_centric)
-        )
-
-        def telemetry_func(state):
-            return self.logger.telemeterize(state)
-        self.drivetrain.register_telemetry(telemetry_func)
+        reset_gyro = self.drivetrain.reset_gyro_cmd()
+        self.driver_controller.leftBumper().onTrue(reset_gyro)
 
         self.driver_controller.b().whileTrue(
             subsystems.drive_robot_relative.drive_command(self.drivetrain, subsystems.drive_robot_relative.FORWARD_OFFSET, self.speed_limit, 0)
@@ -286,5 +239,6 @@ class RobotContainer:
         self.periodic_publish.set(self.periodic_timer.get())
         self.periodic_timer.reset()
         self.front_limelight.telemetry()
+        self.drivetrain.telemetry()
 
         

@@ -1,5 +1,5 @@
 from phoenix6 import CANBus, configs, hardware, signals, swerve, units
-from subsystems.command_swerve_drivetrain import CommandSwerveDrivetrain
+from subsystems.swerve_drivetrain import SwerveDrivetrain
 from wpimath.units import inchesToMeters
 import can_ids
 
@@ -225,12 +225,12 @@ class TunerConstants:
     )
 
     @classmethod
-    def create_drivetrain(clazz) -> CommandSwerveDrivetrain:
+    def create_drivetrain(clazz) -> SwerveDrivetrain:
         """
         Creates a CommandSwerveDrivetrain instance.
         This should only be called once in your robot program.
         """
-        return CommandSwerveDrivetrain(
+        return SwerveDrivetrain(
             hardware.TalonFX,
             hardware.TalonFX,
             hardware.CANcoder,
