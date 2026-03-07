@@ -17,7 +17,7 @@ class Climber(commands2.Subsystem):
         self.latches.set(wpilib.DoubleSolenoid.Value.kReverse)
         self.square_pipe.set(wpilib.DoubleSolenoid.Value.kReverse)
 
-        self.climber_speed = 1.0
+        self.climber_speed = 0.5
 
         self.upper_limit = 0
         self.lower_limit = -100

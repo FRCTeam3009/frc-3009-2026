@@ -13,11 +13,14 @@ class Intake(commands2.Subsystem):
         self.HorizontalMotion.set(wpilib.DoubleSolenoid.Value.kReverse)
         self.VerticalMotion.set(wpilib.DoubleSolenoid.Value.kReverse)
         self.IntakeMotor = phoenix6.hardware.TalonFX(can_ids.intake)
+        self.rollers = rev.SparkMax(can_ids.intake2, rev.SparkLowLevel.MotorType.kBrushless)
 
         # States: -1 = default, 0 = retracting, 1 = deploying
         self.deploying = -1
 
         intake_motor_speed = -1
+
+        rollers_motor_speed = -0.25
 
         timer_time = 2
 
@@ -27,6 +30,13 @@ class Intake(commands2.Subsystem):
         self.motor_speed_publish = self.motor_speed_topic.publish()
         self.motor_speed_publish.set(intake_motor_speed)
         self.motor_speed_subscribe = self.motor_speed_topic.subscribe(intake_motor_speed)
+
+        self.ntcore_instance = ntcore.NetworkTableInstance.getDefault()
+        self.nttable = self.ntcore_instance.getTable("Intake")
+        self.rollers_speed_topic = self.nttable.getFloatTopic("RollerSpeed")
+        self.rollers_speed_publish = self.rollers_speed_topic.publish()
+        self.rollers_speed_publish.set(rollers_motor_speed)
+        self.rollers_speed_subscribe = self.rollers_speed_topic.subscribe(rollers_motor_speed)
 
         self.timer_topic = self.nttable.getFloatTopic("Timer")
         self.timer_publish = self.timer_topic.publish()
@@ -107,6 +117,8 @@ class IntakeCommand(commands2.Command):
 
     def execute(self):
         self.intake.IntakeMotor.set(self.intake.motor_speed_subscribe.get())
+        self.intake.rollers.set(self.intake.rollers_speed_subscribe.get())
 
     def end(self, interrupted: bool):
         self.intake.IntakeMotor.set(0)
+        self.intake.rollers.set(0)
