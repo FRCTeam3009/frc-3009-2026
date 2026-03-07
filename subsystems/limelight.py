@@ -2,7 +2,7 @@ from ntcore import NetworkTableInstance
 import commands2.cmd
 import wpimath.geometry
 import wpimath.units
-import subsystems.command_swerve_drivetrain
+import subsystems.swerve_drivetrain
 import wpimath
 import subsystems.drive_robot_relative
 import subsystems.limelight_positions
@@ -14,7 +14,7 @@ APRIL_TAG_OFFSET = 0.56
 CORAL_OFFSET = wpimath.units.inchesToMeters(-2.5)
 
 class Limelight(object):
-    def __init__(self, name: str, drive_train: subsystems.command_swerve_drivetrain.CommandSwerveDrivetrain):
+    def __init__(self, name: str, drive_train: subsystems.swerve_drivetrain.SwerveDrivetrain):
         # [forward, horizontal, vertical, roll, pitch, yaw, latency, tag count, tag span, average distance, average area]
 
         self.nt_instance = NetworkTableInstance.getDefault()
@@ -107,7 +107,7 @@ class Limelight(object):
                 self.target_poses[key].append_pose(val)
     
     def odometry_update(self, pose: wpimath.geometry.Pose2d):
-        self.drive_train.add_vision_measurement(pose, phoenix6.utils.get_current_time_seconds())
+        self.drive_train.add_vision_measurement(pose)
     
     def telemetry(self):
         pose = self.target_poses[19].get_average_pose()
@@ -127,7 +127,7 @@ class Limelight(object):
         return ResetPose(self, drivetrain)
 
 class LineupCommand(commands2.Command):
-    def __init__(self, drivetrain: subsystems.command_swerve_drivetrain.CommandSwerveDrivetrain, limelight: Limelight, april_id: int):
+    def __init__(self, drivetrain: subsystems.swerve_drivetrain.SwerveDrivetrain, limelight: Limelight, april_id: int):
         self.drivetrain = drivetrain
         self.limelight = limelight
         self.april_id = april_id
@@ -154,7 +154,7 @@ class LineupCommand(commands2.Command):
         return self.command.isFinished()
     
 class ResetPose(commands2.Command):
-    def __init__(self, limelight: Limelight, drivetrain: subsystems.command_swerve_drivetrain.CommandSwerveDrivetrain):
+    def __init__(self, limelight: Limelight, drivetrain: subsystems.swerve_drivetrain.SwerveDrivetrain):
         self.limelight = limelight
         self.drivetrain = drivetrain
 

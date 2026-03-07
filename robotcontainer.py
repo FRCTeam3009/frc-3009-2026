@@ -7,22 +7,17 @@
 import commands2
 import commands2.button
 import commands2.cmd
-from commands2.sysid import SysIdRoutine
-
-from generated.tuner_constants import TunerConstants
-import subsystems.drive_robot_relative
-import telemetry
 import wpilib
 import ntcore
 import wpimath.geometry
-
-from phoenix6 import swerve
-from wpimath.units import rotationsToRadians
-import subsystems.limelight
 import automodes
+import subsystems.limelight
 import subsystems.shooter
 import subsystems.intake
 import subsystems.climber
+import subsystems.drive_robot_relative
+import subsystems.swerve_drivetrain
+import swerve_params
 
 
 class RobotContainer:
@@ -34,44 +29,15 @@ class RobotContainer:
     """
 
     def __init__(self) -> None:
-        self._max_speed = (
-            TunerConstants.speed_at_12_volts
-        )  # speed_at_12_volts desired top speed
-        self._max_angular_rate = rotationsToRadians(
-            0.75
-        )  # 3/4 of a rotation per second max angular velocity
-
-        # Setting up bindings for necessary control of the swerve drive platform
-        self._drive = (
-            swerve.requests.FieldCentric()
-            .with_deadband(self._max_speed * 0.001)
-            .with_rotational_deadband(
-                self._max_angular_rate * 0.001
-            )  # Add a 0.1% deadband
-            .with_drive_request_type(
-                swerve.SwerveModule.DriveRequestType.OPEN_LOOP_VOLTAGE
-            )  # Use open-loop control for drive motors
-        )
-        self._brake = swerve.requests.SwerveDriveBrake()
-        self._point = swerve.requests.PointWheelsAt()
-        self._forward_straight = (
-            swerve.requests.RobotCentric()
-            .with_drive_request_type(
-                swerve.SwerveModule.DriveRequestType.OPEN_LOOP_VOLTAGE
-            )
-        )
-
-        self.logger = telemetry.Telemetry(self._max_speed)
-
         self.driver_controller = commands2.button.CommandXboxController(0)
         self.operator_controller = commands2.button.CommandXboxController(1)
 
-        self.drivetrain = TunerConstants.create_drivetrain()
+        self.drivetrain = subsystems.swerve_drivetrain.SwerveDrivetrain()
+        commands2.CommandScheduler.getInstance().registerSubsystem(self.drivetrain)
 
         self.drivetrain.reset_pose(wpimath.geometry.Pose2d(10, 2, 0))
 
         self.front_limelight = subsystems.limelight.Limelight("limelight-front", self.drivetrain)
-        self.back_limelight = subsystems.limelight.Limelight("limelight-back", self.drivetrain)
 
         self.auto_dashboard = automodes.AutoDashboard()
 
@@ -99,8 +65,6 @@ class RobotContainer:
         self.configure_button_bindings()
         
         self.front_limelight.update_command().schedule()
-        self.back_limelight.update_command().schedule()
-        #self.front_limelight.odometry_command().schedule()
 
     def set_turbo_speed(self):
         self.speed_limit = subsystems.drive_robot_relative.TURBO_SPEED
@@ -126,127 +90,101 @@ class RobotContainer:
         #         |
         #    Y <--*
         #
+
+        def forward_drive() -> float:
+            return -1 * self.driver_controller.getLeftY() * swerve_params.speed * self.speed_limit
+        def sideways_drive() -> float:
+            return -1 * self.driver_controller.getLeftX() * swerve_params.speed * self.speed_limit
+        def rotation_drive() -> float:
+            return -1 * self.driver_controller.getRightX() * swerve_params.angular_rate * self.speed_limit
         self.drivetrain.setDefaultCommand(
             # Drivetrain will execute this command periodically
-            self.drivetrain.apply_request(
-                lambda: (
-                    self._drive.with_velocity_x(
-                        -self.driver_controller.getLeftY() * self._max_speed * self.speed_limit
-                    )  # Drive forward with negative Y (forward)
-                    .with_velocity_y(
-                        -self.driver_controller.getLeftX() * self._max_speed * self.speed_limit
-                    )  # Drive left with negative X (left)
-                    .with_rotational_rate(
-                        -self.driver_controller.getRightX() * self._max_angular_rate * self.speed_limit
-                    )  # Drive counterclockwise with negative X (left)
-                )
+            self.drivetrain.drive_cmd(
+                forward_drive,
+                sideways_drive,
+                rotation_drive,
             )
         )
 
-        self.driver_controller.povUp().whileTrue(
-            self.drivetrain.apply_request(
-                lambda: self._forward_straight
-                .with_velocity_x(subsystems.drive_robot_relative.NORMAL_SPEED)
-                .with_velocity_y(0)
-                .with_rotational_rate(-self.driver_controller.getRightX() * self._max_angular_rate / 2)
-            )
-        )
-        self.driver_controller.povDown().whileTrue(
-            self.drivetrain.apply_request(
-                lambda: self._forward_straight
-                .with_velocity_x(-subsystems.drive_robot_relative.NORMAL_SPEED)
-                .with_velocity_y(0)
-                .with_rotational_rate(-self.driver_controller.getRightX() * self._max_angular_rate / 2)
-            )
-        )
-        self.driver_controller.povRight().whileTrue(
-            self.drivetrain.apply_request(
-                lambda: self._forward_straight
-                .with_velocity_x(0.0)
-                .with_velocity_y(-subsystems.drive_robot_relative.NORMAL_SPEED)
-                .with_rotational_rate(-self.driver_controller.getRightX() * self._max_angular_rate / 2)
-            )
-        )
-        self.driver_controller.povLeft().whileTrue(
-            self.drivetrain.apply_request(
-                lambda: self._forward_straight
-                .with_velocity_x(0.0)
-                .with_velocity_y(subsystems.drive_robot_relative.NORMAL_SPEED)
-                .with_rotational_rate(-self.driver_controller.getRightX() * self._max_angular_rate / 2)
-            )
-        )
-        self.driver_controller.povUpRight().whileTrue(
-            self.drivetrain.apply_request(
-                lambda: self._forward_straight
-                .with_velocity_x(subsystems.drive_robot_relative.NORMAL_SPEED)
-                .with_velocity_y(-subsystems.drive_robot_relative.NORMAL_SPEED)
-                .with_rotational_rate(-self.driver_controller.getRightX() * self._max_angular_rate / 2)
-            )
-        )
-        self.driver_controller.povDownRight().whileTrue(
-            self.drivetrain.apply_request(
-                lambda: self._forward_straight
-                .with_velocity_x(-subsystems.drive_robot_relative.NORMAL_SPEED)
-                .with_velocity_y(-subsystems.drive_robot_relative.NORMAL_SPEED)
-                .with_rotational_rate(-self.driver_controller.getRightX() * self._max_angular_rate / 2)
-            )
-        )
-        self.driver_controller.povDownLeft().whileTrue(
-            self.drivetrain.apply_request(
-                lambda: self._forward_straight
-                .with_velocity_x(-subsystems.drive_robot_relative.NORMAL_SPEED)
-                .with_velocity_y(subsystems.drive_robot_relative.NORMAL_SPEED)
-                .with_rotational_rate(-self.driver_controller.getRightX() * self._max_angular_rate / 2)
-            )
-        )
-        self.driver_controller.povUpLeft().whileTrue(
-            self.drivetrain.apply_request(
-                lambda: self._forward_straight
-                .with_velocity_x(subsystems.drive_robot_relative.NORMAL_SPEED)
-                .with_velocity_y(subsystems.drive_robot_relative.NORMAL_SPEED)
-                .with_rotational_rate(-self.driver_controller.getRightX() * self._max_angular_rate / 2)
-            )
-        )
-
-        # Run SysId routines when holding back/start and X/Y.
-        # Note that each routine should be run exactly once in a single log.
-        (self.driver_controller.back() & self.driver_controller.y()).whileTrue(
-            self.drivetrain.sys_id_dynamic(SysIdRoutine.Direction.kForward)
-        )
-        (self.driver_controller.back() & self.driver_controller.x()).whileTrue(
-            self.drivetrain.sys_id_dynamic(SysIdRoutine.Direction.kReverse)
-        )
-        (self.driver_controller.start() & self.driver_controller.y()).whileTrue(
-            self.drivetrain.sys_id_quasistatic(SysIdRoutine.Direction.kForward)
-        )
-        (self.driver_controller.start() & self.driver_controller.x()).whileTrue(
-            self.drivetrain.sys_id_quasistatic(SysIdRoutine.Direction.kReverse)
-        )
+        # # Drive Robot-relative for small adjustments with D-pad
+        # self.driver_controller.povUp().whileTrue(
+        #     subsystems.drive_robot_relative.drive_forward_command(
+        #         self.drivetrain,
+        #         1.0,
+        #         subsystems.drive_robot_relative.NORMAL_SPEED,
+        #     )
+        # )
+        # self.driver_controller.povDown().whileTrue(
+        #     subsystems.drive_robot_relative.drive_forward_command(
+        #         self.drivetrain,
+        #         -1.0,
+        #         subsystems.drive_robot_relative.NORMAL_SPEED,
+        #     )
+        # )
+        # self.driver_controller.povRight().whileTrue(
+        #     subsystems.drive_robot_relative.drive_sideways_command(
+        #         self.drivetrain,
+        #         1.0,
+        #         subsystems.drive_robot_relative.NORMAL_SPEED,
+        #     )
+        # )
+        # self.driver_controller.povLeft().whileTrue(
+        #     subsystems.drive_robot_relative.drive_sideways_command(
+        #         self.drivetrain,
+        #         1.0,
+        #         subsystems.drive_robot_relative.NORMAL_SPEED,
+        #     )
+        # )
+        # self.driver_controller.povUpRight().whileTrue(
+        #     subsystems.drive_robot_relative.drive_command(
+        #         self.drivetrain,
+        #         1.0,
+        #         1.0,
+        #         subsystems.drive_robot_relative.NORMAL_SPEED,
+        #         0.0,
+        #     )
+        # )
+        # self.driver_controller.povDownRight().whileTrue(
+        #     subsystems.drive_robot_relative.drive_command(
+        #         self.drivetrain,
+        #         -1.0,
+        #         1.0,
+        #         subsystems.drive_robot_relative.NORMAL_SPEED,
+        #         0.0,
+        #     )
+        # )
+        # self.driver_controller.povDownLeft().whileTrue(
+        #     subsystems.drive_robot_relative.drive_command(
+        #         self.drivetrain,
+        #         -1.0,
+        #         -1.0,
+        #         subsystems.drive_robot_relative.NORMAL_SPEED,
+        #         0.0,
+        #     )
+        # )
+        # self.driver_controller.povUpLeft().whileTrue(
+        #     subsystems.drive_robot_relative.drive_command(
+        #         self.drivetrain,
+        #         1.0,
+        #         -1.0,
+        #         subsystems.drive_robot_relative.NORMAL_SPEED,
+        #         0.0,
+        #     )
+        # )
 
         # reset the field-centric heading on left bumper press
-        def field_centric():
-            return self.drivetrain.seed_field_centric()
-        self.driver_controller.leftBumper().onTrue(
-            self.drivetrain.runOnce(field_centric)
-        )
-
-        def telemetry_func(state):
-            return self.logger.telemeterize(state)
-        self.drivetrain.register_telemetry(telemetry_func)
-
-        self.driver_controller.b().whileTrue(
-            subsystems.drive_robot_relative.drive_command(self.drivetrain, subsystems.drive_robot_relative.FORWARD_OFFSET, self.speed_limit, 0)
-        )
+        reset_gyro = self.drivetrain.reset_gyro_cmd()
+        self.driver_controller.back().onTrue(reset_gyro)
         
         def shoot_speed():
             return -1 * self.operator_controller.getRightTriggerAxis()
-        self.operator_controller.rightTrigger().whileTrue(
+        self.operator_controller.rightTrigger(0.1).whileTrue(
             self.shooter.fire_cmd(shoot_speed)
         )
         
         def shoot_backwards():
             return self.shooter.backwards_speed
-        self.operator_controller.leftTrigger().whileTrue(
+        self.operator_controller.leftTrigger(0.1).whileTrue(
             self.shooter.fire_cmd(shoot_backwards)
         )
 
@@ -286,5 +224,6 @@ class RobotContainer:
         self.periodic_publish.set(self.periodic_timer.get())
         self.periodic_timer.reset()
         self.front_limelight.telemetry()
+        self.drivetrain.telemetry()
 
         

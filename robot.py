@@ -10,6 +10,7 @@ import commands2
 import typing
 import ntcore
 import robotcontainer
+import simulation
 
 class MyRobot(commands2.TimedCommandRobot):
     """
@@ -76,7 +77,6 @@ class MyRobot(commands2.TimedCommandRobot):
 
         self.container.telemetry()
 
-
         self.container.auto_dashboard.update()
 
         self.robot_periodic_publish.set(self.robot_periodic_timer.get())
@@ -126,3 +126,6 @@ class MyRobot(commands2.TimedCommandRobot):
     def testInit(self) -> None:
         # Cancels all running commands at the start of test mode
         commands2.CommandScheduler.getInstance().cancelAll()
+
+    def _simulationInit(self) -> None:
+        simulation.is_simulation = True

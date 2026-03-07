@@ -2,7 +2,7 @@ import pathplannerlib.path
 import pathplannerlib.auto
 import wpimath.units
 import commands2
-import subsystems.command_swerve_drivetrain
+import subsystems.swerve_drivetrain
 import subsystems.drive_robot_relative
 import ntcore
 import wpilib
@@ -91,7 +91,7 @@ rot_auto = get_rotation()
 
 # start_pose is used for the auto modes that don't use the limelights.
 # This gives us an estimate starting position.
-def start_pose(drivetrain: subsystems.command_swerve_drivetrain.CommandSwerveDrivetrain, offset: float) -> Pose2d:
+def start_pose(drivetrain: subsystems.swerve_drivetrain.SwerveDrivetrain, offset: float) -> Pose2d:
     starting_position = positions[5]
     sp = starting_position.transformBy(wpimath.geometry.Transform2d(0, offset, 0))
 
@@ -119,8 +119,8 @@ def pathplanner_constraints() -> pathplannerlib.path.PathConstraints:
         wpimath.units.rotationsToRadians(0.75), 
     )
 
-def noob_auto_drive_straight_forward(drivetrain: subsystems.command_swerve_drivetrain.CommandSwerveDrivetrain) -> commands2.Command:
-    return subsystems.drive_robot_relative.drive_command(drivetrain, wpimath.units.meters(1.5), subsystems.drive_robot_relative.NORMAL_SPEED, 0)
+def noob_auto_drive_straight_forward(drivetrain: subsystems.swerve_drivetrain.SwerveDrivetrain) -> commands2.Command:
+    return subsystems.drive_robot_relative.drive_forward_command(drivetrain, wpimath.units.meters(1.5), subsystems.drive_robot_relative.NORMAL_SPEED)
 
 def sit() -> commands2.Command:
     return commands2.Command()
@@ -128,7 +128,7 @@ def sit() -> commands2.Command:
 # This auto does not use the limelights.
 def move_shoot_center(
         shooter: subsystems.shooter.Shooter,
-        drivetrain: subsystems.command_swerve_drivetrain.CommandSwerveDrivetrain
+        drivetrain: subsystems.swerve_drivetrain.SwerveDrivetrain
     ) -> commands2.Command:
     sp = start_pose(drivetrain, 0)
     transform = sp.transformBy(wpimath.geometry.Transform2d(-auto_movement, 0, 0))
@@ -140,7 +140,7 @@ def move_shoot_center(
 # This auto does not use the limelights.
 def move_shoot_right(
         shooter: subsystems.shooter.Shooter,
-        drivetrain: subsystems.command_swerve_drivetrain.CommandSwerveDrivetrain
+        drivetrain: subsystems.swerve_drivetrain.SwerveDrivetrain
     ) -> commands2.Command:
     sp = start_pose(drivetrain, side_start)
     transform = sp.transformBy(wpimath.geometry.Transform2d(-auto_movement, 0, rot_auto))
@@ -152,7 +152,7 @@ def move_shoot_right(
 # This auto does not use the limelights.
 def move_shoot_left(
         shooter: subsystems.shooter.Shooter,
-        drivetrain: subsystems.command_swerve_drivetrain.CommandSwerveDrivetrain
+        drivetrain: subsystems.swerve_drivetrain.SwerveDrivetrain
     ) -> commands2.Command:
 
     side = 1.0
@@ -320,7 +320,7 @@ class AutoDashboard():
     
 
 class WaitCommand(commands2.Command):
-    def __init__(self, drivetrain: subsystems.command_swerve_drivetrain.CommandSwerveDrivetrain):
+    def __init__(self, drivetrain: subsystems.swerve_drivetrain.SwerveDrivetrain):
         self.drive_robot_relative = (
             swerve.requests.RobotCentric()
             .with_drive_request_type(
@@ -331,8 +331,9 @@ class WaitCommand(commands2.Command):
         self.timer = wpilib.Timer()
         
     def execute(self):
-        drive_request = lambda: self.drive_robot_relative.with_velocity_x(0).with_velocity_y(0).with_rotational_rate(0)
-        self.drivetrain.apply_request(drive_request).execute()
+        def stop() -> float:
+            return 0.0
+        self.drivetrain.drive_cmd(stop, stop, stop).execute()
         self.timer.start()
 
     def isFinished(self):

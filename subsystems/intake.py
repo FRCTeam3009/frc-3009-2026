@@ -121,4 +121,5 @@ class IntakeCommand(commands2.Command):
 
     def end(self, interrupted: bool):
         self.intake.IntakeMotor.set(0)
+
         self.intake.rollers.set(0)
