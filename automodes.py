@@ -142,7 +142,12 @@ def move_shoot_right(
         shooter: subsystems.shooter.Shooter,
         drivetrain: subsystems.swerve_drivetrain.SwerveDrivetrain
     ) -> commands2.Command:
-    sp = start_pose(drivetrain, side_start)
+
+    side = 1.0
+    if wpilib.DriverStation.getAlliance() == wpilib.DriverStation.Alliance.kRed:
+        side = -1.0
+
+    sp = start_pose(drivetrain, -1 * side * side_start)
     transform = sp.transformBy(wpimath.geometry.Transform2d(-auto_movement, 0, rot_auto))
     cmds = commands2.SequentialCommandGroup()
     cmds.addCommands(drive_to_pose(transform))
@@ -156,7 +161,7 @@ def move_shoot_left(
     ) -> commands2.Command:
 
     side = 1.0
-    if wpilib.DriverStation.getAlliance() == wpilib.DriverStation.Alliance.kBlue:
+    if wpilib.DriverStation.getAlliance() == wpilib.DriverStation.Alliance.kRed:
         side = -1.0
 
     sp = start_pose(drivetrain, side * side_start)

@@ -13,11 +13,11 @@ turn_gear_ratio = 21.42857
 wheel_radius: wpimath.units.meters = wpimath.units.inchesToMeters(2)
 wheel_circumference: wpimath.units.meters = wheel_radius * 2 * math.pi
 
-turn_p = 25.0
+turn_p = 1.0 #25.0
 turn_i = 0.0
 turn_d = 0.1
 turn_s = 0.1
-turn_v = 1.66
+turn_v = 0.0 #1.66
 turn_a = 0.0
 
 drive_p = 0.1

@@ -92,11 +92,20 @@ class RobotContainer:
         #
 
         def forward_drive() -> float:
-            return -1 * self.driver_controller.getLeftY() * swerve_params.speed * self.speed_limit
+            output = -1 * self.driver_controller.getLeftY() * swerve_params.speed * self.speed_limit
+            if abs(output) < 0.01:
+                return 0
+            return output
         def sideways_drive() -> float:
-            return -1 * self.driver_controller.getLeftX() * swerve_params.speed * self.speed_limit
+            output = -1 * self.driver_controller.getLeftX() * swerve_params.speed * self.speed_limit
+            if abs(output) < 0.01:
+                return 0
+            return output
         def rotation_drive() -> float:
-            return -1 * self.driver_controller.getRightX() * swerve_params.angular_rate * self.speed_limit
+            output = -1 * self.driver_controller.getRightX() * swerve_params.angular_rate * self.speed_limit
+            if abs(output) < 0.01:
+                return 0
+            return output
         self.drivetrain.setDefaultCommand(
             # Drivetrain will execute this command periodically
             self.drivetrain.drive_cmd(

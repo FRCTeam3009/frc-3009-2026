@@ -129,8 +129,7 @@ class SwerveDrivetrain(commands2.Subsystem):
 
         if simulation.is_simulation and abs(rotation) > 0:
             current = self.get_heading().degrees()
-            self.pigeon.set_yaw(current + rotation)
-            # TODO update swerve_module motor positions in sim
+            self.pigeon.set_yaw(current + wpimath.units.radiansToDegrees(rotation))
 
         i = 0
         while i < 4:

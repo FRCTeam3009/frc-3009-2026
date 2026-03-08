@@ -21,6 +21,16 @@ class SwerveModule():
         self.encoder.configurator.apply(encoder_config)
 
         self.turn_pid = self.turn.getClosedLoopController()
+        self.turn_pid_config = rev.ClosedLoopConfig()
+        self.turn_pid_config.P(swerve_params.turn_p)
+        self.turn_pid_config.I(swerve_params.turn_i)
+        self.turn_pid_config.D(swerve_params.turn_d)
+        self.turn_pid_config.feedForward.kS(swerve_params.turn_s)
+        self.turn_pid_config.feedForward.kA(swerve_params.turn_a)
+        self.turn_pid_config.feedForward.kV(swerve_params.turn_v)
+        self.turn_pid_config.positionWrappingEnabled(True)
+        self.turn_pid_config.positionWrappingInputRange(0, 90)
+        
 
         self.drive_pid = phoenix6.swerve.utility.phoenix_pid_controller.PhoenixPIDController(
             swerve_params.drive_p,
@@ -71,11 +81,21 @@ class SwerveModule():
 
     def set_state(self, state: wpimath.kinematics.SwerveModuleState):
         self.turn_setpoint = state.angle.degrees()
-        self.turn_pid.setSetpoint(state.angle.degrees(), rev.SparkLowLevel.ControlType.kPosition)
+        # TODO disabling all spining for now
+        self.turn_pid.setSetpoint(state.angle.radians(), rev.SparkLowLevel.ControlType.kPosition)
 
         rotations_per_second = state.speed / swerve_params.wheel_circumference
         self.drive_setpoint = rotations_per_second
         self.drive.set_control(self.drive_velocity.with_velocity(rotations_per_second))
+
+        if simulation.is_simulation:
+            current_drive = self.drive.get_position().value_as_double
+            rotations_drive = state.speed / 100
+            self.drive.set_position(current_drive + rotations_drive)
+
+            current_turn = self.turn.getEncoder().getPosition()
+            rotations_turn = state.angle.degrees() / 360
+            self.turn.getEncoder().setPosition(current_turn + rotations_turn)
 
     def get_angle(self) -> wpimath.geometry.Rotation2d:
         rotation = self.encoder.get_position()

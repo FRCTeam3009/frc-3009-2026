@@ -29,7 +29,8 @@ class Shooter(commands2.Subsystem):
         self.motor_speed_subscribe = self.shooter_topic.subscribe(self.shooter_speed)
 
         # Speed in RPMs that we want the shooter motor to reach before we start firing. (e.g. 5000)
-        self.ramp_up_speed = 6700
+        max_speed = 6700
+        self.ramp_up_speed = max_speed * 0.4
         self.ramp_up_speed_topic = self.shooter_table.getFloatTopic("ramp_up_speed")
         self.ramp_up_speed_publish = self.ramp_up_speed_topic.publish()
         self.ramp_up_speed_publish.set(self.ramp_up_speed)
