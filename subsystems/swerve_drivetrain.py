@@ -98,7 +98,8 @@ class SwerveDrivetrain(commands2.Subsystem):
         self.position_publish.set(wpimath.geometry.Pose2d())
 
     def get_heading(self) -> wpimath.geometry.Rotation2d:
-        return self.pigeon.getRotation2d()
+        heading = self.pigeon.get_yaw().value_as_double
+        return wpimath.geometry.Rotation2d.fromDegrees(heading)
 
     def get_pose(self) -> wpimath.geometry.Pose2d:
         return self.odometry.getPose()

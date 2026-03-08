@@ -8,6 +8,8 @@ import phoenix6.configs
 import phoenix6.controls
 import ntcore
 import simulation
+import wpimath.controller
+import math
 
 class SwerveModule():
     def __init__(self, name: str, drive: int, turn: int, encoder: int, encoder_offset: float, table: ntcore.NetworkTable):
@@ -20,17 +22,12 @@ class SwerveModule():
         encoder_config.magnet_sensor.magnet_offset = -1 * encoder_offset
         self.encoder.configurator.apply(encoder_config)
 
-        self.turn_pid = self.turn.getClosedLoopController()
-        self.turn_pid_config = rev.ClosedLoopConfig()
-        self.turn_pid_config.P(swerve_params.turn_p)
-        self.turn_pid_config.I(swerve_params.turn_i)
-        self.turn_pid_config.D(swerve_params.turn_d)
-        self.turn_pid_config.feedForward.kS(swerve_params.turn_s)
-        self.turn_pid_config.feedForward.kA(swerve_params.turn_a)
-        self.turn_pid_config.feedForward.kV(swerve_params.turn_v)
-        self.turn_pid_config.positionWrappingEnabled(True)
-        self.turn_pid_config.positionWrappingInputRange(0, 90)
-        
+        self.turn_pid = wpimath.controller.PIDController(
+            swerve_params.turn_p,
+            swerve_params.turn_i,
+            swerve_params.turn_d,
+        )
+        self.turn_pid.enableContinuousInput(0, 90)
 
         self.drive_pid = phoenix6.swerve.utility.phoenix_pid_controller.PhoenixPIDController(
             swerve_params.drive_p,
@@ -72,17 +69,24 @@ class SwerveModule():
         self.drive_setpoint_publish.set(0.0)
         self.drive_setpoint = 0.0
 
+        self.encoder_topic = self.nt_table.getDoubleTopic("Encoder")
+        self.encoder_publish = self.encoder_topic.publish()
+        self.encoder_publish.set(0.0)
+
     def telemetry(self):
         self.rotation_topic_publish.set(self.get_angle().degrees())
         self.drive_speed_publish.set(self.drive.get_velocity().value_as_double)
         self.turn_speed_publish.set(self.turn.get())
         self.turn_setpoint_publish.set(self.turn_setpoint)
         self.drive_setpoint_publish.set(self.drive_setpoint)
+        self.encoder_publish.set(self.get_angle().degrees() % 360)
 
     def set_state(self, state: wpimath.kinematics.SwerveModuleState):
         self.turn_setpoint = state.angle.degrees()
-        # TODO disabling all spining for now
-        self.turn_pid.setSetpoint(state.angle.radians(), rev.SparkLowLevel.ControlType.kPosition)
+        turn_pos = self.get_angle().radians()
+        turn_value = self.turn_pid.calculate(turn_pos, state.angle.radians())
+        if turn_value > 0.01:
+            self.turn.set(turn_value)
 
         rotations_per_second = state.speed / swerve_params.wheel_circumference
         self.drive_setpoint = rotations_per_second
