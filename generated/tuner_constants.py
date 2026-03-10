@@ -142,7 +142,7 @@ class TunerConstants:
     _front_left_drive_motor_id = can_ids.drive_front_left
     _front_left_steer_motor_id = can_ids.turn_front_left
     _front_left_encoder_id = can_ids.encoders_front_left
-    _front_left_encoder_offset: units.rotation = can_ids.encoder_offsets_front_left
+    _front_left_encoder_offset: units.rotation = -1 * can_ids.encoder_offsets_front_left
     _front_left_steer_motor_inverted = True
     _front_left_encoder_inverted = False
 
@@ -153,7 +153,7 @@ class TunerConstants:
     _front_right_drive_motor_id = can_ids.drive_front_right
     _front_right_steer_motor_id = can_ids.turn_front_right
     _front_right_encoder_id = can_ids.encoders_front_right
-    _front_right_encoder_offset: units.rotation = can_ids.encoder_offsets_front_right
+    _front_right_encoder_offset: units.rotation = -1 * can_ids.encoder_offsets_front_right
     _front_right_steer_motor_inverted = True
     _front_right_encoder_inverted = False
 
@@ -164,7 +164,7 @@ class TunerConstants:
     _back_left_drive_motor_id = can_ids.drive_back_left
     _back_left_steer_motor_id = can_ids.turn_back_left
     _back_left_encoder_id = can_ids.encoders_back_left
-    _back_left_encoder_offset: units.rotation = can_ids.encoder_offsets_back_left
+    _back_left_encoder_offset: units.rotation = -1 * can_ids.encoder_offsets_back_left
     _back_left_steer_motor_inverted = True
     _back_left_encoder_inverted = False
 
@@ -175,7 +175,7 @@ class TunerConstants:
     _back_right_drive_motor_id = can_ids.drive_back_right
     _back_right_steer_motor_id = can_ids.turn_back_right
     _back_right_encoder_id = can_ids.encoders_back_right
-    _back_right_encoder_offset: units.rotation = can_ids.encoder_offsets_back_right
+    _back_right_encoder_offset: units.rotation = -1 * can_ids.encoder_offsets_back_right
     _back_right_steer_motor_inverted = True
     _back_right_encoder_inverted = False
 
