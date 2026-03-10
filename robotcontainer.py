@@ -71,7 +71,6 @@ class RobotContainer:
         self.drivetrain.reset_pose(wpimath.geometry.Pose2d(10, 2, 0))
 
         self.front_limelight = subsystems.limelight.Limelight("limelight-front", self.drivetrain)
-        self.back_limelight = subsystems.limelight.Limelight("limelight-back", self.drivetrain)
 
         self.auto_dashboard = automodes.AutoDashboard()
 
@@ -86,12 +85,13 @@ class RobotContainer:
 
         self.speed_limit = subsystems.drive_robot_relative.NORMAL_SPEED
 
-        self.shooter = subsystems.shooter.Shooter()
-        commands2.CommandScheduler.getInstance().registerSubsystem(self.shooter)
-
         self.intake = subsystems.intake.Intake()
         commands2.CommandScheduler.getInstance().registerSubsystem(self.intake)
-
+        
+        self.shooter = subsystems.shooter.Shooter(self.intake)
+        commands2.CommandScheduler.getInstance().registerSubsystem(self.shooter)
+        self.shooter.setDefaultCommand(self.shooter.idle_cmd())
+        
         self.climber = subsystems.climber.Climber()
         commands2.CommandScheduler.getInstance().registerSubsystem(self.climber)
 
@@ -99,8 +99,6 @@ class RobotContainer:
         self.configure_button_bindings()
         
         self.front_limelight.update_command().schedule()
-        self.back_limelight.update_command().schedule()
-        #self.front_limelight.odometry_command().schedule()
 
     def set_turbo_speed(self):
         self.speed_limit = subsystems.drive_robot_relative.TURBO_SPEED

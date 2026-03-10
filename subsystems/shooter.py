@@ -5,11 +5,11 @@ import wpimath.system.plant
 import typing
 import ntcore
 import can_ids
+import subsystems.intake
 
 class Shooter(commands2.Subsystem):
-    asdf = 5
 
-    def __init__(self):
+    def __init__(self, intake: subsystems.intake.Intake):
         self.motor = rev.SparkMax(can_ids.shooter, rev.SparkLowLevel.MotorType.kBrushless)
         self.motor_sim = rev.SparkSim(self.motor, wpimath.system.plant.DCMotor.NEO(1))
 
@@ -38,10 +38,13 @@ class Shooter(commands2.Subsystem):
 
         # Multiplier for the speed of the motor that pulls balls out of the hopper into the shooter. (e.g. 0.25)
         self.ramp_motor_speed = 0.75
+        self.automatic_ramp_speed = -0.25
         self.ramp_motor_speed_topic = self.shooter_table.getFloatTopic("ramp_motor_speed")
         self.ramp_motor_speed_publish = self.ramp_motor_speed_topic.publish()
         self.ramp_motor_speed_publish.set(self.ramp_motor_speed)
         self.ramp_motor_speed_subscribe = self.ramp_motor_speed_topic.subscribe(self.ramp_motor_speed)
+
+        self.intake = intake
     
     def move(self, speed: float):
         self.motor.set(speed)
@@ -51,6 +54,9 @@ class Shooter(commands2.Subsystem):
 
     def fire_cmd(self, speed: typing.Callable[[], float]):
         return FireCommand(self, speed)
+    
+    def idle_cmd(self):
+        return IdleCommand(self, self.intake)
 
 class FireCommand(commands2.Command):
     def __init__(self, shooter: Shooter, speed: typing.Callable[[], float]):
@@ -75,3 +81,15 @@ class FireCommand(commands2.Command):
     def end(self, interrupted: bool):
         self.shooter.move(0)
         self.shooter.ramp_motor.set(0)
+
+class IdleCommand(commands2.Command):
+    def __init__(self, shooter: Shooter, intake: subsystems.intake.Intake):
+        self.addRequirements(shooter)
+        self.shooter = shooter
+        self.intake = intake
+
+    def execute(self):
+        if abs(self.intake.IntakeMotor.get()) > 0.01:
+            self.shooter.ramp_motor.set(self.shooter.automatic_ramp_speed)
+        else:
+            self.shooter.ramp_motor.set(0)
