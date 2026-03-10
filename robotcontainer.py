@@ -257,7 +257,7 @@ class RobotContainer:
         self.operator_controller.b().onTrue(
             self.intake.InNOutCmd()
         )
-        self.operator_controller.y().whileTrue(
+        self.operator_controller.y().onTrue(
             self.intake.IntakeCmd()
         )
         self.operator_controller.a().onTrue(
