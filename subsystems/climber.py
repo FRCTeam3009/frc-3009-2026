@@ -1,5 +1,3 @@
-import rev
-import wpimath.system.plant
 import commands2
 import ntcore
 import can_ids
@@ -89,6 +87,9 @@ class UpperLatchCommand(commands2.Command):
     def execute(self):
         self.climber.upper_latch_toggle()
 
+    def isFinished(self) -> bool:
+        return True
+
 class LowerLatchCommand(commands2.Command):
     def __init__(self, climber: Climber):
         self.climber = climber
@@ -96,6 +97,9 @@ class LowerLatchCommand(commands2.Command):
 
     def execute(self):
         self.climber.lower_latch_toggle()
+
+    def isFinished(self) -> bool:
+        return True
 
 class UpsiesCommand(commands2.Command):
     def __init__(self, climber: Climber):
@@ -124,8 +128,8 @@ class Hold(commands2.Command):
         self.pos = self.climber.get_position()
 
     def execute(self):
-        if self.climber.climber_motor.get_position() < (self.pos - 5):
+        if self.climber.climber_motor.get_position().value_as_double < (self.pos - 5):
             self.climber.climber_speed = self.climber.motor_speed_subscribe.get()
             self.climber.climber_movement(self.climber.climber_speed * 0.5)
-        if self.climber.climber_motor.get_position() >= self.pos:
+        if self.climber.climber_motor.get_position().value_as_double >= self.pos:
             self.climber.climber_movement(0)
