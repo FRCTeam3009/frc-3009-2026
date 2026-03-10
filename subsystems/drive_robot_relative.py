@@ -1,6 +1,6 @@
 import commands2
 import wpimath.geometry
-import subsystems.swerve_drivetrain
+import subsystems.command_swerve_drivetrain
 import wpimath
 import wpimath.units
 import phoenix6.swerve
@@ -25,7 +25,7 @@ SLOW_SPEED = 0.25
 
 class DriveRobotRelativeCommand(commands2.Command):
     def __init__(self, 
-                 drive_train: subsystems.swerve_drivetrain.SwerveDrivetrain, 
+                 drive_train: subsystems.command_swerve_drivetrain.CommandSwerveDrivetrain, 
                  offset: wpimath.geometry.Transform2d,
                  speed: float,
                  ):
@@ -43,7 +43,7 @@ class DriveRobotRelativeCommand(commands2.Command):
 
 
     def initialize(self):
-        self.start_pose = self.drive_train.get_pose()
+        self.start_pose = self.drive_train.get_state_copy().pose
         self.end_pose = self.start_pose + self.offset
         
         forward = 0.0
@@ -73,7 +73,7 @@ class DriveRobotRelativeCommand(commands2.Command):
         self.rotation = rotation
         
     def execute(self):
-        current_pose = self.drive_train.get_pose()
+        current_pose = self.drive_train.get_state_copy().pose
         diff = self.end_pose - current_pose
 
         # Check each direction separately to know if we're within range or need to change direction
@@ -86,39 +86,29 @@ class DriveRobotRelativeCommand(commands2.Command):
             self.horizontal = 0.0
 
         # rotation
-        degrees = diff.rotation().degrees()
-        if abs(degrees) < TWO_DEGREES:
+        r = diff.rotation().degrees()
+        if abs(r) < TWO_DEGREES:
             self.rotation = 0.0
         
-        f = lambda: self.forward
-        h = lambda: self.horizontal
-        r = lambda: self.rotation
-        self.drive_cmd = self.drive_train.drive_cmd(f, h, r)
+        drive_request = lambda: ROBOT_RELATIVE.with_velocity_x(self.forward).with_velocity_y(self.horizontal).with_rotational_rate(self.rotation)
+        self.drive_cmd = self.drive_train.apply_request(drive_request)
         self.drive_cmd.execute()
 
     def isFinished(self):
-        current_pose = self.drive_train.get_pose()
+        current_pose = self.drive_train.get_state_copy().pose
         diff = self.end_pose - current_pose
 
         # Stop if all directions are within range
         return abs(diff.X()) < ONE_INCH and abs(diff.Y()) < ONE_INCH and abs(diff.rotation().degrees()) < TWO_DEGREES
     
     def end(self, interrupted):
-        def stop() -> float:
-            return 0.0
-        self.drive_train.drive_cmd(stop, stop, stop).execute()
+        drive_request = lambda: ROBOT_RELATIVE.with_velocity_x(0.0).with_velocity_y(0.0).with_rotational_rate(0.0)
+        self.drive_train.apply_request(drive_request).execute()
 
-def drive_forward_command(drive_train: subsystems.swerve_drivetrain.SwerveDrivetrain, offset: float, speed: float):
-    return drive_command(drive_train, offset, 0.0, speed, 0.0)
+def drive_command(drive_train: subsystems.command_swerve_drivetrain.CommandSwerveDrivetrain, offset: float, speed: float, rotation: wpimath.units.radians):
+    pose = wpimath.geometry.Transform2d(offset, 0.0, rotation)
+    return DriveRobotRelativeCommand(drive_train, pose, speed)
 
-def drive_sideways_command(drive_train: subsystems.swerve_drivetrain.SwerveDrivetrain, offset: float, speed: float):
-    return drive_command(drive_train, 0.0, offset, speed, 0.0)
-
-def drive_command(
-        drive_train: subsystems.swerve_drivetrain.SwerveDrivetrain,
-        forward: float,
-        sideways: float,
-        speed: float,
-        rotation: wpimath.units.radians):
-    pose = wpimath.geometry.Transform2d(forward, sideways, rotation)
+def drive_sideways_command(drive_train: subsystems.command_swerve_drivetrain.CommandSwerveDrivetrain, offset: float, speed: float):
+    pose = wpimath.geometry.Transform2d(0.0, offset, 0.0)
     return DriveRobotRelativeCommand(drive_train, pose, speed)
