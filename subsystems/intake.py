@@ -43,6 +43,8 @@ class Intake(commands2.Subsystem):
         self.timer_publish.set(timer_time)
         self.timer_subscribe = self.timer_topic.subscribe(timer_time)
 
+        self.is_running = False
+
     def VerticalState(self) -> wpilib.DoubleSolenoid.Value:
         return self.VerticalMotion.get()
 
@@ -60,6 +62,9 @@ class Intake(commands2.Subsystem):
     
     def IntakeCmd(self) -> IntakeCommand:
         return IntakeCommand(self)
+    
+    def ChangeBoolCmd(self) -> ChangeBool:
+        return ChangeBool(self)
     
 class InNOutCommand(commands2.Command):
     def __init__(self, intake: Intake):
@@ -116,9 +121,19 @@ class IntakeCommand(commands2.Command):
         self.intake = intake
 
     def execute(self):
-        self.intake.IntakeMotor.set(self.intake.motor_speed_subscribe.get())
-        self.intake.rollers.set(self.intake.rollers_speed_subscribe.get())
+        if self.intake.is_running:
+            self.intake.IntakeMotor.set(self.intake.motor_speed_subscribe.get())
+            self.intake.rollers.set(self.intake.rollers_speed_subscribe.get())
+        else:
+            self.intake.IntakeMotor.set(0)
+            self.intake.rollers.set(0)
 
-    def end(self, interrupted: bool):
-        self.intake.IntakeMotor.set(0)
-        self.intake.rollers.set(0)
+class ChangeBool(commands2.Command):
+    def __init__(self, intake: Intake):
+        self.intake = intake
+
+    def execute(self):
+        self.intake.is_running = not self.intake.is_running
+
+    def isFinished(self) -> bool:
+        return True

@@ -87,6 +87,7 @@ class RobotContainer:
 
         self.intake = subsystems.intake.Intake()
         commands2.CommandScheduler.getInstance().registerSubsystem(self.intake)
+        self.intake.setDefaultCommand(self.intake.IntakeCmd())
         
         self.shooter = subsystems.shooter.Shooter(self.intake)
         commands2.CommandScheduler.getInstance().registerSubsystem(self.shooter)
@@ -258,7 +259,7 @@ class RobotContainer:
             self.intake.InNOutCmd()
         )
         self.operator_controller.y().onTrue(
-            self.intake.IntakeCmd()
+            self.intake.ChangeBoolCmd()
         )
         self.operator_controller.a().onTrue(
             self.climber.UpperLatchCmd()
