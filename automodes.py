@@ -144,7 +144,7 @@ def move_shoot_right(
     ) -> commands2.Command:
 
     side = 1.0
-    if wpilib.DriverStation.getAlliance() == wpilib.DriverStation.Alliance.kRed:
+    if should_mirror():
         side = -1.0
 
     sp = start_pose(drivetrain, -1 * side * side_start)
@@ -161,7 +161,7 @@ def move_shoot_left(
     ) -> commands2.Command:
 
     side = 1.0
-    if wpilib.DriverStation.getAlliance() == wpilib.DriverStation.Alliance.kRed:
+    if should_mirror():
         side = -1.0
 
     sp = start_pose(drivetrain, side * side_start)
