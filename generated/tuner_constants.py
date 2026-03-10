@@ -1,6 +1,7 @@
 from typing import TYPE_CHECKING, overload
 from phoenix6 import CANBus, configs, hardware, signals, swerve, units
 from wpimath.units import inchesToMeters
+import can_ids
 
 if TYPE_CHECKING:
     from subsystems.command_swerve_drivetrain import CommandSwerveDrivetrain
@@ -92,7 +93,7 @@ class TunerConstants:
     _invert_left_side = False
     _invert_right_side = True
 
-    _pigeon_id = 52
+    _pigeon_id = can_ids.pigeon
 
     # These are only used for simulation
     _steer_inertia: units.kilogram_square_meter = 0.01
@@ -138,10 +139,10 @@ class TunerConstants:
 
 
     # Front Left
-    _front_left_drive_motor_id = 40
-    _front_left_steer_motor_id = 11
-    _front_left_encoder_id = 32
-    _front_left_encoder_offset: units.rotation = 0.31884765625
+    _front_left_drive_motor_id = can_ids.drive_front_left
+    _front_left_steer_motor_id = can_ids.turn_front_left
+    _front_left_encoder_id = can_ids.encoders_front_left
+    _front_left_encoder_offset: units.rotation = can_ids.encoder_offsets_front_left
     _front_left_steer_motor_inverted = True
     _front_left_encoder_inverted = False
 
@@ -149,10 +150,10 @@ class TunerConstants:
     _front_left_y_pos: units.meter = inchesToMeters(10.5)
 
     # Front Right
-    _front_right_drive_motor_id = 44
-    _front_right_steer_motor_id = 14
-    _front_right_encoder_id = 31
-    _front_right_encoder_offset: units.rotation = -0.39404296875
+    _front_right_drive_motor_id = can_ids.drive_front_right
+    _front_right_steer_motor_id = can_ids.turn_front_right
+    _front_right_encoder_id = can_ids.encoders_front_right
+    _front_right_encoder_offset: units.rotation = can_ids.encoder_offsets_front_right
     _front_right_steer_motor_inverted = True
     _front_right_encoder_inverted = False
 
@@ -160,10 +161,10 @@ class TunerConstants:
     _front_right_y_pos: units.meter = inchesToMeters(-10.5)
 
     # Back Left
-    _back_left_drive_motor_id = 43
-    _back_left_steer_motor_id = 16
-    _back_left_encoder_id = 33
-    _back_left_encoder_offset: units.rotation = 0.12109375
+    _back_left_drive_motor_id = can_ids.drive_back_left
+    _back_left_steer_motor_id = can_ids.turn_back_left
+    _back_left_encoder_id = can_ids.encoders_back_left
+    _back_left_encoder_offset: units.rotation = can_ids.encoder_offsets_back_left
     _back_left_steer_motor_inverted = True
     _back_left_encoder_inverted = False
 
@@ -171,10 +172,10 @@ class TunerConstants:
     _back_left_y_pos: units.meter = inchesToMeters(10.5)
 
     # Back Right
-    _back_right_drive_motor_id = 41
-    _back_right_steer_motor_id = 13
-    _back_right_encoder_id = 30
-    _back_right_encoder_offset: units.rotation = 0.498046875
+    _back_right_drive_motor_id = can_ids.drive_back_right
+    _back_right_steer_motor_id = can_ids.turn_back_right
+    _back_right_encoder_id = can_ids.encoders_back_right
+    _back_right_encoder_offset: units.rotation = can_ids.encoder_offsets_back_right
     _back_right_steer_motor_inverted = True
     _back_right_encoder_inverted = False
 
@@ -363,4 +364,4 @@ class TunerSwerveDrivetrain(
             arg1,
             arg2,
             arg3,
-        )
+        )
