@@ -22,15 +22,15 @@ class Shooter(commands2.Subsystem):
         self.shooter_table = self.ntcore_instance.getTable("Shooter")
 
         # Multiplier for the speed of the shooter motor. (e.g. 0.75)
-        self.shooter_speed = 0.75
+        self.shooter_speed = 0.51
         self.shooter_topic = self.shooter_table.getFloatTopic("MotorSpeed")
         self.motor_speed_publish = self.shooter_topic.publish()
         self.motor_speed_publish.set(self.shooter_speed)
         self.motor_speed_subscribe = self.shooter_topic.subscribe(self.shooter_speed)
 
         # Speed in RPMs that we want the shooter motor to reach before we start firing. (e.g. 5000)
-        max_speed = 6700
-        self.ramp_up_speed = max_speed * 0.4
+        # max_speed = 6700
+        self.ramp_up_speed = 3000
         self.ramp_up_speed_topic = self.shooter_table.getFloatTopic("ramp_up_speed")
         self.ramp_up_speed_publish = self.ramp_up_speed_topic.publish()
         self.ramp_up_speed_publish.set(self.ramp_up_speed)
@@ -69,6 +69,8 @@ class FireCommand(commands2.Command):
         ramp_motor_speed = self.shooter.ramp_motor_speed_subscribe.get()
         if current_speed > ramp_up_speed:
             self.shooter.ramp_motor.set(ramp_motor_speed)
+        elif self.speed() > 0:
+            self.shooter.ramp_motor.set(-1 * ramp_motor_speed)
 
     def end(self, interrupted: bool):
         self.shooter.move(0)

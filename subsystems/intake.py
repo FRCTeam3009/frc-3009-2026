@@ -20,7 +20,7 @@ class Intake(commands2.Subsystem):
 
         intake_motor_speed = -1
 
-        rollers_motor_speed = -0.25
+        rollers_motor_speed = -0.35
 
         timer_time = 2
 
