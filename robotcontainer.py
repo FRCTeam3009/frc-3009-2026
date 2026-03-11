@@ -224,7 +224,6 @@ class RobotContainer:
 
         # reset the field-centric heading on left bumper press
         def field_centric():
-            print("PENGUINS")
             return self.drivetrain.seed_field_centric()
         (self.driver_controller.back() & self.driver_controller.start()).onTrue(
             self.drivetrain.runOnce(field_centric)
