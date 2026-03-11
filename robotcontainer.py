@@ -224,18 +224,15 @@ class RobotContainer:
 
         # reset the field-centric heading on left bumper press
         def field_centric():
+            print("PENGUINS")
             return self.drivetrain.seed_field_centric()
-        self.driver_controller.leftBumper().onTrue(
+        (self.driver_controller.back() & self.driver_controller.start()).onTrue(
             self.drivetrain.runOnce(field_centric)
         )
 
         def telemetry_func(state):
             return self.logger.telemeterize(state)
         self.drivetrain.register_telemetry(telemetry_func)
-
-        self.driver_controller.b().whileTrue(
-            subsystems.drive_robot_relative.drive_command(self.drivetrain, subsystems.drive_robot_relative.FORWARD_OFFSET, self.speed_limit, 0)
-        )
         
         def shoot_speed():
             return -1 * self.operator_controller.getRightTriggerAxis()
@@ -266,9 +263,6 @@ class RobotContainer:
         )
         self.operator_controller.x().onTrue(
             self.climber.LowerLatchCmd()
-        )
-        (self.driver_controller.back() & self.driver_controller.start()).whileTrue(
-            self.front_limelight.reset_pose_command(self.drivetrain)
         )
         self.operator_controller.start().onTrue(
             self.climber.StabilizerCmd()
