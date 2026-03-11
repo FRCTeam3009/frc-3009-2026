@@ -121,9 +121,7 @@ def pathplanner_constraints() -> pathplannerlib.path.PathConstraints:
     )
 
 def noob_auto_drive_straight_forward(drivetrain: subsystems.command_swerve_drivetrain.CommandSwerveDrivetrain) -> commands2.Command:
-    move = -1.5
-    if should_mirror():
-        move = 1.5
+    move = 1.5
     start_pose(drivetrain, 0)
     return subsystems.drive_robot_relative.drive_command(drivetrain, wpimath.units.meters(move), subsystems.drive_robot_relative.NORMAL_SPEED, 0)
 
@@ -137,10 +135,7 @@ def move_shoot_center(
         intake: subsystems.intake.Intake
     ) -> commands2.Command:
     sp = start_pose(drivetrain, 0)
-    move = auto_movement
-    if should_mirror():
-        move = move * -1
-    transform = sp.transformBy(wpimath.geometry.Transform2d(move, 0, 0))
+    transform = sp.transformBy(wpimath.geometry.Transform2d(-auto_movement, 0, 0))
     cmds = commands2.SequentialCommandGroup()
     cmds.addCommands(drive_to_pose(transform))
     cmds.addCommands(autoSetup(intake))
@@ -158,10 +153,9 @@ def move_shoot_right(
     move = auto_movement * math.cos(rot_auto)
     if should_mirror():
         side = -1.0
-        move = move * -1
 
     sp = start_pose(drivetrain, -1 * side * side_start)
-    transform = sp.transformBy(wpimath.geometry.Transform2d(move, 0, -rot_auto))
+    transform = sp.transformBy(wpimath.geometry.Transform2d(-move, 0, rot_auto * side))
     cmds = commands2.SequentialCommandGroup()
     cmds.addCommands(drive_to_pose(transform))
     cmds.addCommands(autoSetup(intake))
@@ -179,10 +173,9 @@ def move_shoot_left(
     move = auto_movement * math.cos(rot_auto)
     if should_mirror():
         side = -1.0
-        move = -1 * move
 
     sp = start_pose(drivetrain, side * side_start)
-    transform = sp.transformBy(wpimath.geometry.Transform2d(move, 0, rot_auto))
+    transform = sp.transformBy(wpimath.geometry.Transform2d(-move, 0, -rot_auto * side))
 
     cmds = commands2.SequentialCommandGroup()
     cmds.addCommands(drive_to_pose(transform))
