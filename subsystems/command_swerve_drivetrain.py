@@ -6,7 +6,8 @@ from typing import Callable, overload
 from wpilib import DriverStation, Notifier, RobotController
 from wpilib.sysid import SysIdRoutineLog
 from wpimath.geometry import Pose2d, Rotation2d
-
+from pathplannerlib.auto import AutoBuilder, RobotConfig
+from pathplannerlib.controller import PIDConstants, PPHolonomicDriveController
 from generated.tuner_constants import TunerSwerveDrivetrain
 
 
@@ -165,6 +166,8 @@ class CommandSwerveDrivetrain(Subsystem, TunerSwerveDrivetrain):
         )
         """SysId routine for characterizing translation. This is used to find PID gains for the drive motors."""
 
+        self._apply_robot_speeds = swerve.requests.ApplyRobotSpeeds()
+
         self._sys_id_routine_steer = SysIdRoutine(
             SysIdRoutine.Config(
                 # Use default ramp rate (1 V/s) and timeout (10 s)
@@ -224,6 +227,7 @@ class CommandSwerveDrivetrain(Subsystem, TunerSwerveDrivetrain):
 
         if utils.is_simulation():
             self._start_sim_thread()
+        self._configure_auto_builder()
 
     def apply_request(
         self, request: Callable[[], swerve.requests.SwerveRequest]
@@ -277,6 +281,33 @@ class CommandSwerveDrivetrain(Subsystem, TunerSwerveDrivetrain):
                     else self._BLUE_ALLIANCE_PERSPECTIVE_ROTATION
                 )
                 self._has_applied_operator_perspective = True
+
+    
+    def _configure_auto_builder(self):
+        config = RobotConfig.fromGUISettings()
+        AutoBuilder.configure(
+            lambda: self.get_state().pose,   # Supplier of current robot pose
+            self.reset_pose,                 # Consumer for seeding pose against auto
+            lambda: self.get_state().speeds, # Supplier of current robot speeds
+            # Consumer of ChassisSpeeds and feedforwards to drive the robot
+            lambda speeds, feedforwards: self.set_control(
+                self._apply_robot_speeds
+                .with_speeds(speeds)
+                .with_wheel_force_feedforwards_x(feedforwards.robotRelativeForcesXNewtons)
+                .with_wheel_force_feedforwards_y(feedforwards.robotRelativeForcesYNewtons)
+            ),
+            PPHolonomicDriveController(
+                # PID constants for translation
+                PIDConstants(10.0, 0.0, 0.0),
+                # PID constants for rotation
+                PIDConstants(7.0, 0.0, 0.0)
+            ),
+            config,
+            # Assume the path needs to be flipped for Red vs Blue, this is normally the case
+            lambda: (DriverStation.getAlliance() or DriverStation.Alliance.kBlue) == DriverStation.Alliance.kRed,
+            self # Subsystem for requirements
+        )
+        AutoBuilder.pathfindToPose
 
     def _start_sim_thread(self):
         def _sim_periodic():

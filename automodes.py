@@ -13,12 +13,13 @@ from wpimath.geometry import Rotation2d, Pose2d
 import subsystems.shooter
 import math
 import subsystems.climber
+import subsystems.intake
 import subsystems.autoEndHubRB
 import typing
 
-auto_movement = 1
+auto_movement = wpimath.units.inchesToMeters(75)
 # side_start is middle of the ramp
-side_start = 0.927
+side_start = wpimath.units.inchesToMeters(65)
 speed_auto = 0.50
 climber_offset = 0.2032
 
@@ -33,8 +34,8 @@ positions[4] = Pose2d(14.846, 4.752, Rotation2d.fromDegrees(180)) # Red Climb Ri
 # TODO you can use should_mirror() and mirror_position() to flip, then just define the Blue sides.
 
 # Manual center start pose when not trusting the limelights
-positions[5] = Pose2d(wpimath.units.inchesToMeters(140),
-                      wpimath.units.inchesToMeters(156.06),
+positions[5] = Pose2d(wpimath.units.inchesToMeters(140), # 140
+                      wpimath.units.inchesToMeters(156.06), # 156.06
                       Rotation2d.fromDegrees(0))
 
 positions[7] = Pose2d(14.92, 4.04, Rotation2d.fromDegrees(180)) # Red Coral
@@ -85,7 +86,7 @@ def auto_move_back() -> float:
 back_move_sideways = auto_move_back()
 
 def get_rotation() -> float:
-    return math.asin(side_start / auto_movement)
+    return math.acos(side_start / auto_movement)
 
 rot_auto = get_rotation()
 
@@ -120,7 +121,11 @@ def pathplanner_constraints() -> pathplannerlib.path.PathConstraints:
     )
 
 def noob_auto_drive_straight_forward(drivetrain: subsystems.command_swerve_drivetrain.CommandSwerveDrivetrain) -> commands2.Command:
-    return subsystems.drive_robot_relative.drive_command(drivetrain, wpimath.units.meters(1.5), subsystems.drive_robot_relative.NORMAL_SPEED, 0)
+    move = -1.5
+    if should_mirror():
+        move = 1.5
+    start_pose(drivetrain, 0)
+    return subsystems.drive_robot_relative.drive_command(drivetrain, wpimath.units.meters(move), subsystems.drive_robot_relative.NORMAL_SPEED, 0)
 
 def sit() -> commands2.Command:
     return commands2.Command()
@@ -128,47 +133,60 @@ def sit() -> commands2.Command:
 # This auto does not use the limelights.
 def move_shoot_center(
         shooter: subsystems.shooter.Shooter,
-        drivetrain: subsystems.command_swerve_drivetrain.CommandSwerveDrivetrain
+        drivetrain: subsystems.command_swerve_drivetrain.CommandSwerveDrivetrain,
+        intake: subsystems.intake.Intake
     ) -> commands2.Command:
     sp = start_pose(drivetrain, 0)
-    transform = sp.transformBy(wpimath.geometry.Transform2d(-auto_movement, 0, 0))
+    move = auto_movement
+    if should_mirror():
+        move = move * -1
+    transform = sp.transformBy(wpimath.geometry.Transform2d(move, 0, 0))
     cmds = commands2.SequentialCommandGroup()
     cmds.addCommands(drive_to_pose(transform))
-    cmds.addCommands(shoot_fuel(shooter).withTimeout(5.0))
+    cmds.addCommands(autoSetup(intake))
+    cmds.addCommands(shoot_fuel(shooter).withTimeout(10.0))
     return cmds
 
 # This auto does not use the limelights.
 def move_shoot_right(
         shooter: subsystems.shooter.Shooter,
-        drivetrain: subsystems.command_swerve_drivetrain.CommandSwerveDrivetrain
+        drivetrain: subsystems.command_swerve_drivetrain.CommandSwerveDrivetrain,
+        intake: subsystems.intake.Intake
     ) -> commands2.Command:
 
     side = 1.0
+    move = auto_movement * math.cos(rot_auto)
     if should_mirror():
         side = -1.0
+        move = move * -1
 
     sp = start_pose(drivetrain, -1 * side * side_start)
-    transform = sp.transformBy(wpimath.geometry.Transform2d(-auto_movement, 0, rot_auto))
+    transform = sp.transformBy(wpimath.geometry.Transform2d(move, 0, -rot_auto))
     cmds = commands2.SequentialCommandGroup()
     cmds.addCommands(drive_to_pose(transform))
+    cmds.addCommands(autoSetup(intake))
     cmds.addCommands(shoot_fuel(shooter).withTimeout(5.0))
     return cmds
 
 # This auto does not use the limelights.
 def move_shoot_left(
         shooter: subsystems.shooter.Shooter,
-        drivetrain: subsystems.command_swerve_drivetrain.CommandSwerveDrivetrain
+        drivetrain: subsystems.command_swerve_drivetrain.CommandSwerveDrivetrain,
+        intake: subsystems.intake.Intake
     ) -> commands2.Command:
 
     side = 1.0
+    move = auto_movement * math.cos(rot_auto)
     if should_mirror():
         side = -1.0
+        move = -1 * move
 
     sp = start_pose(drivetrain, side * side_start)
-    transform = sp.transformBy(wpimath.geometry.Transform2d(-auto_movement, 0, -rot_auto))
+    transform = sp.transformBy(wpimath.geometry.Transform2d(move, 0, rot_auto))
 
     cmds = commands2.SequentialCommandGroup()
     cmds.addCommands(drive_to_pose(transform))
+    cmds.addCommands(autoSetup(intake))
     cmds.addCommands(shoot_fuel(shooter).withTimeout(5.0))
     return cmds
 
@@ -249,16 +267,17 @@ class AutoDashboard():
     AUTO_CLIMB_RIGHT_RED = "climb_right_red"
     AUTO_CLIMB_LEFT_RED = "climb_left_red"
 
+    # Dropdown menu selection list
     auto_mode_list = [
         AUTO_SIT,
         AUTO_NOOB_FORWARD,
         AUTO_MOVE_SHOOT_CENTER,
         AUTO_MOVE_SHOOT_LEFT,
         AUTO_MOVE_SHOOT_RIGHT,
-        AUTO_CLIMB_RIGHT_BLUE,
-        AUTO_CLIMB_LEFT_BLUE,
-        AUTO_CLIMB_RIGHT_RED,
-        AUTO_CLIMB_LEFT_RED
+        # AUTO_CLIMB_RIGHT_BLUE,
+        # AUTO_CLIMB_LEFT_BLUE,
+        # AUTO_CLIMB_RIGHT_RED,
+        # AUTO_CLIMB_LEFT_RED
     ]
             
     def __init__(self):
@@ -303,15 +322,15 @@ class AutoDashboard():
         secondsStr = f"{seconds:.2f} Seconds"
         self.hub_timer_publish.set(secondsStr)
 
-    def get_current_auto_builder(self, drivetrain, shooter, climber):
+    def get_current_auto_builder(self, drivetrain, shooter, climber, intake: subsystems.intake.Intake) -> commands2.Command:
         if self.current_auto == AutoDashboard.AUTO_NOOB_FORWARD:
             return noob_auto_drive_straight_forward(drivetrain)
         elif self.current_auto == AutoDashboard.AUTO_MOVE_SHOOT_CENTER:
-            return move_shoot_center(shooter, drivetrain)
+            return move_shoot_center(shooter, drivetrain, intake)
         elif self.current_auto == AutoDashboard.AUTO_MOVE_SHOOT_LEFT:
-            return move_shoot_left(shooter, drivetrain)
+            return move_shoot_left(shooter, drivetrain, intake)
         elif self.current_auto == AutoDashboard.AUTO_MOVE_SHOOT_RIGHT:
-            return move_shoot_right(shooter, drivetrain)
+            return move_shoot_right(shooter, drivetrain, intake)
         elif self.current_auto == AutoDashboard.AUTO_CLIMB_RIGHT_BLUE:
             return blue_climb_right(climber)
         elif self.current_auto == AutoDashboard.AUTO_CLIMB_LEFT_BLUE:
@@ -322,6 +341,12 @@ class AutoDashboard():
             return red_climb_left(climber)
         else:
             return sit()
+    
+def autoSetup(intake: subsystems.intake.Intake):
+    fullAuto = commands2.SequentialCommandGroup()
+    fullAuto.addCommands(intake.InNOutCmd())
+    fullAuto.addCommands(intake.StartBoolCmd())
+    return fullAuto
     
 
 class WaitCommand(commands2.Command):

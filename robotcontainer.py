@@ -120,10 +120,10 @@ class RobotContainer:
         # Note that X is defined as forward according to WPILib convention,
         # and Y is defined as to the left according to WPILib convention.
         #
-        #         X
+        #         X+
         #         ^
         #         |
-        #    Y <--*
+        #   Y+ <--*
         #
         self.drivetrain.setDefaultCommand(
             # Drivetrain will execute this command periodically
@@ -277,13 +277,13 @@ class RobotContainer:
 
         :returns: the command to run in autonomous
         """
-
-        auto_mode = self.auto_dashboard.get_current_auto_builder(self.drivetrain, self.shooter, self.climber)
+        auto_mode = self.auto_dashboard.get_current_auto_builder(self.drivetrain, self.shooter, self.climber, self.intake)
         return auto_mode
     
     def telemetry(self):
         self.periodic_publish.set(self.periodic_timer.get())
         self.periodic_timer.reset()
         self.front_limelight.telemetry()
+        self.intake.telemtry()
 
         

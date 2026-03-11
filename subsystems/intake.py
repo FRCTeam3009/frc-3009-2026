@@ -1,14 +1,13 @@
 import wpilib
 import commands2
 import rev
-import wpimath.system.plant
 import can_ids
 import ntcore
 import phoenix6
 
 class Intake(commands2.Subsystem):
     def __init__(self):
-        self.HorizontalMotion = wpilib.DoubleSolenoid(wpilib.PneumaticsModuleType.REVPH, 0, 1)
+        self.HorizontalMotion = wpilib.DoubleSolenoid(wpilib.PneumaticsModuleType.REVPH, 0, 1) # TODO make sure the ids are good
         self.VerticalMotion = wpilib.DoubleSolenoid(wpilib.PneumaticsModuleType.REVPH, 2, 3)
         self.HorizontalMotion.set(wpilib.DoubleSolenoid.Value.kReverse)
         self.VerticalMotion.set(wpilib.DoubleSolenoid.Value.kReverse)
@@ -45,6 +44,11 @@ class Intake(commands2.Subsystem):
 
         self.is_running = False
 
+        
+        self.roller_topic = self.nttable.getBooleanTopic("Rollers")
+        self.roller_publish = self.roller_topic.publish()
+        self.roller_publish.set(self.is_running)
+
     def VerticalState(self) -> wpilib.DoubleSolenoid.Value:
         return self.VerticalMotion.get()
 
@@ -65,6 +69,12 @@ class Intake(commands2.Subsystem):
     
     def ChangeBoolCmd(self) -> ChangeBool:
         return ChangeBool(self)
+    
+    def StartBoolCmd(self) -> StartBool:
+        return StartBool(self)
+    
+    def telemtry(self):
+        self.roller_publish.set(self.is_running)
     
 class InNOutCommand(commands2.Command):
     def __init__(self, intake: Intake):
@@ -128,6 +138,16 @@ class IntakeCommand(commands2.Command):
             self.intake.IntakeMotor.set(0)
             self.intake.rollers.set(0)
 
+class StartBool(commands2.Command):
+    def __init__(self, intake: Intake):
+        self.intake = intake
+
+    def execute(self):
+        self.intake.is_running = True
+
+    def isFinished(self) -> bool:
+        return True
+    
 class ChangeBool(commands2.Command):
     def __init__(self, intake: Intake):
         self.intake = intake

@@ -10,8 +10,9 @@ class Climber(commands2.Subsystem):
     def __init__(self):
         self.climber_motor = phoenix6.hardware.TalonFX(can_ids.climber)
 
-        self.latches = wpilib.DoubleSolenoid(wpilib.PneumaticsModuleType.REVPH, 4, 5)
-        self.square_pipe = wpilib.DoubleSolenoid(wpilib.PneumaticsModuleType.REVPH, 6, 7)
+        # TODO make sure IDs are good.
+        self.latches = wpilib.DoubleSolenoid(wpilib.PneumaticsModuleType.REVPH, 4, 5) # Claws up/down
+        self.square_pipe = wpilib.DoubleSolenoid(wpilib.PneumaticsModuleType.REVPH, 6, 7) # Arms open/close
         self.latches.set(wpilib.DoubleSolenoid.Value.kReverse)
         self.square_pipe.set(wpilib.DoubleSolenoid.Value.kReverse)
 
@@ -79,6 +80,7 @@ class MoveClimberCommand(commands2.Command):
     def end(self, interrupted: bool):
         self.climber.climber_movement(0)
 
+# Arms open/close
 class UpperLatchCommand(commands2.Command):
     def __init__(self, climber: Climber):
         self.climber = climber
@@ -90,6 +92,7 @@ class UpperLatchCommand(commands2.Command):
     def isFinished(self) -> bool:
         return True
 
+# Claws up/down
 class LowerLatchCommand(commands2.Command):
     def __init__(self, climber: Climber):
         self.climber = climber
