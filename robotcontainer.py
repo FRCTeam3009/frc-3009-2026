@@ -270,6 +270,9 @@ class RobotContainer:
         (self.driver_controller.back() & self.driver_controller.start()).whileTrue(
             self.front_limelight.reset_pose_command(self.drivetrain)
         )
+        self.operator_controller.start().onTrue(
+            self.climber.StabilizerCmd()
+        )
         
     
     def get_auto_command(self) -> commands2.Command:

@@ -7,8 +7,8 @@ import phoenix6
 
 class Intake(commands2.Subsystem):
     def __init__(self):
-        self.HorizontalMotion = wpilib.DoubleSolenoid(wpilib.PneumaticsModuleType.REVPH, 0, 1) # TODO make sure the ids are good
-        self.VerticalMotion = wpilib.DoubleSolenoid(wpilib.PneumaticsModuleType.REVPH, 2, 3)
+        self.HorizontalMotion = wpilib.DoubleSolenoid(wpilib.PneumaticsModuleType.REVPH, 0, 15) # TODO make sure the ids are good
+        self.VerticalMotion = wpilib.DoubleSolenoid(wpilib.PneumaticsModuleType.REVPH, 1, 14)
         self.HorizontalMotion.set(wpilib.DoubleSolenoid.Value.kReverse)
         self.VerticalMotion.set(wpilib.DoubleSolenoid.Value.kReverse)
         self.IntakeMotor = phoenix6.hardware.TalonFX(can_ids.intake)
