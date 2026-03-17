@@ -63,6 +63,7 @@ class Shooter(commands2.Subsystem):
 class FireCommand(commands2.Command):
     def __init__(self, shooter: Shooter, speed: typing.Callable[[], float], intake: subsystems.intake.Intake):
         self.addRequirements(shooter)
+        self.addRequirements(intake)
         self.intake = intake
         self.shooter = shooter
         self.speed = speed
@@ -71,6 +72,8 @@ class FireCommand(commands2.Command):
         # Start running the shooter motor
         shooter_speed = self.shooter.motor_speed_subscribe.get()
         self.shooter.move(self.speed() * shooter_speed)
+
+        backwards = self.speed() > 0
 
         # Start running the rollers to pull balls into the shooter
         self.intake.is_running = True
@@ -82,8 +85,9 @@ class FireCommand(commands2.Command):
         ramp_motor_speed = self.shooter.ramp_motor_speed_subscribe.get()
         if current_speed > ramp_up_speed:
             self.shooter.ramp_motor.set(ramp_motor_speed)
-        elif self.speed() > 0:
+        elif backwards:
             self.shooter.ramp_motor.set(-1 * ramp_motor_speed)
+            self.intake.RunRollersBackwards()
 
     def end(self, interrupted: bool):
         self.shooter.move(0)

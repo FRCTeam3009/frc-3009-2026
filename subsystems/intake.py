@@ -82,6 +82,9 @@ class Intake(commands2.Subsystem):
     def RunRollers(self):
         self.rollers.set(self.rollers_speed_subscribe.get())
 
+    def RunRollersBackwards(self):
+        self.rollers.set(self.rollers_speed_subscribe.get() * -1)
+        
 class InNOutCommand(commands2.Command):
     def __init__(self, intake: Intake):
         self.addRequirements(intake)
