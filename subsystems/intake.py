@@ -7,7 +7,7 @@ import phoenix6
 
 class Intake(commands2.Subsystem):
     def __init__(self):
-        self.HorizontalMotion = wpilib.DoubleSolenoid(3, wpilib.PneumaticsModuleType.REVPH, 3, 12) # TODO make sure the ids are good
+        self.HorizontalMotion = wpilib.DoubleSolenoid(3, wpilib.PneumaticsModuleType.REVPH, 3, 12)
         self.VerticalMotion = wpilib.DoubleSolenoid(3, wpilib.PneumaticsModuleType.REVPH, 4, 11)
         self.HorizontalMotion.set(wpilib.DoubleSolenoid.Value.kReverse)
         self.VerticalMotion.set(wpilib.DoubleSolenoid.Value.kReverse)
@@ -84,7 +84,7 @@ class Intake(commands2.Subsystem):
 
     def RunRollersBackwards(self):
         self.rollers.set(self.rollers_speed_subscribe.get() * -1)
-        
+
 class InNOutCommand(commands2.Command):
     def __init__(self, intake: Intake):
         self.addRequirements(intake)

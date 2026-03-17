@@ -233,16 +233,12 @@ class RobotContainer:
             return self.logger.telemeterize(state)
         self.drivetrain.register_telemetry(telemetry_func)
         
-        def shoot_speed():
-            return -1 * self.operator_controller.getRightTriggerAxis()
-        self.operator_controller.rightTrigger(0.1).whileTrue(
-            self.shooter.fire_cmd(shoot_speed)
+        self.operator_controller.rightTrigger().whileTrue(
+            self.shooter.fire_cmd(-1 * self.shooter.shooter_speed)
         )
         
-        def shoot_backwards():
-            return self.shooter.backwards_speed
-        self.operator_controller.leftTrigger(0.1).whileTrue(
-            self.shooter.fire_cmd(shoot_backwards)
+        self.operator_controller.leftTrigger().whileTrue(
+            self.shooter.fire_cmd(self.shooter.backwards_speed)
         )
 
         self.operator_controller.povUp().whileTrue(
@@ -266,13 +262,11 @@ class RobotContainer:
         # self.operator_controller.start().onTrue(
         #    self.climber.StabilizerCmd()
         #)
-        self.operator_controller.rightBumper().onTrue(
+        self.operator_controller.leftBumper().onTrue(
            self.intake.IntakeActiveCmd() 
         )
-        def big_shot():
-            return -1 * self.shooter.big_shot_speed
         self.operator_controller.rightBumper().whileTrue(
-            self.shooter.fire_cmd(big_shot)
+            self.shooter.fire_cmd(-1 * self.shooter.big_shot_speed)
         )
         
     
