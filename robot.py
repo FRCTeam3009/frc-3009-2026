@@ -58,6 +58,9 @@ class MyRobot(commands2.TimedCommandRobot):
         self.robot_periodic_timer.reset()
         self.robot_periodic_timer.start()
 
+        self.compressor = wpilib.Compressor(3, wpilib.PneumaticsModuleType.REVPH)
+        self.compressor.enableDigital()
+
     def robotPeriodic(self) -> None:
         """This function is called every 20 ms, no matter the mode. Use this for items like diagnostics
         that you want ran during disabled, autonomous, teleoperated and test.

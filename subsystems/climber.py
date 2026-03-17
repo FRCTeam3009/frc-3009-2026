@@ -11,12 +11,12 @@ class Climber(commands2.Subsystem):
         self.climber_motor = phoenix6.hardware.TalonFX(can_ids.climber)
 
         # TODO make sure IDs are good.
-        self.latches = wpilib.DoubleSolenoid(wpilib.PneumaticsModuleType.REVPH, 2, 13) # Claws up/down
-        self.arms = wpilib.DoubleSolenoid(wpilib.PneumaticsModuleType.REVPH, 3, 12) # Arms open/close
-        self.stabilizer = wpilib.DoubleSolenoid(wpilib.PneumaticsModuleType.REVPH, 4, 11) # Stabilizer in/out
+        self.latches = wpilib.DoubleSolenoid(3, wpilib.PneumaticsModuleType.REVPH, 1, 14) # Claws up/down
+        self.arms = wpilib.DoubleSolenoid(3, wpilib.PneumaticsModuleType.REVPH, 2, 13) # Arms open/close
+        # self.stabilizer = wpilib.DoubleSolenoid(3, wpilib.PneumaticsModuleType.REVPH, 4, 11) # Stabilizer in/out
         self.latches.set(wpilib.DoubleSolenoid.Value.kReverse)
         self.arms.set(wpilib.DoubleSolenoid.Value.kReverse)
-        self.stabilizer.set(wpilib.DoubleSolenoid.Value.kReverse)
+        # self.stabilizer.set(wpilib.DoubleSolenoid.Value.kReverse)
 
         self.climber_speed = 0.5
 
@@ -62,8 +62,8 @@ class Climber(commands2.Subsystem):
     def LowerLatchCmd(self) -> LowerLatchCommand:
         return LowerLatchCommand(self)
     
-    def StabilizerCmd(self) -> StabilizerCommand:
-        return StabilizerCommand(self)
+    # def StabilizerCmd(self) -> StabilizerCommand:
+    #    return StabilizerCommand(self)
 
 class MoveClimberCommand(commands2.Command):
     def __init__(self, climber: Climber, speed: float):
@@ -92,6 +92,7 @@ class UpperLatchCommand(commands2.Command):
         self.upper_latch = self.climber.arms
 
     def execute(self):
+        print(self.upper_latch.get())
         self.climber.upper_latch_toggle()
 
     def isFinished(self) -> bool:
@@ -108,15 +109,15 @@ class LowerLatchCommand(commands2.Command):
     def isFinished(self) -> bool:
         return True
     
-class StabilizerCommand(commands2.Command):
-    def __init__(self, climber: Climber):
-        self.climber = climber
+# class StabilizerCommand(commands2.Command):
+    # def __init__(self, climber: Climber):
+        # self.climber = climber
 
-    def execute(self):
-        self.climber.stabilizer.toggle()
+    # def execute(self):
+        # self.climber.stabilizer.toggle()
 
-    def isFinished(self) -> bool:
-        return True
+    # def isFinished(self) -> bool:
+        # return True
 
 class UpsiesCommand(commands2.Command):
     def __init__(self, climber: Climber):

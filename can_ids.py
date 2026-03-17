@@ -7,7 +7,7 @@ drive_back_right = 41 # kraken
 turn_front_left = 11 # kraken
 turn_front_right = 14 # kraken
 turn_back_left = 16 # kraken
-turn_back_right = 13 # Kraken
+turn_back_right = 13 # kraken
 
 encoders_front_left = 32
 encoders_front_right = 31

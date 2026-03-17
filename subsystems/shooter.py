@@ -22,7 +22,9 @@ class Shooter(commands2.Subsystem):
         self.shooter_table = self.ntcore_instance.getTable("Shooter")
 
         # Multiplier for the speed of the shooter motor. (e.g. 0.75)
-        self.shooter_speed = 0.65
+        self.shooter_speed = 0.55
+        self.big_shot_speed = 1.275 # double the speed you actually want
+        self.auto_shot_speed = 1.04 # double the speed I actually want
         self.shooter_topic = self.shooter_table.getFloatTopic("MotorSpeed")
         self.motor_speed_publish = self.shooter_topic.publish()
         self.motor_speed_publish.set(self.shooter_speed)

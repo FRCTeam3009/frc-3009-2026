@@ -138,7 +138,8 @@ def move_shoot_center(
     transform = sp.transformBy(wpimath.geometry.Transform2d(-auto_movement, 0, 0))
     cmds = commands2.SequentialCommandGroup()
     cmds.addCommands(drive_to_pose(transform))
-    cmds.addCommands(autoSetup(intake))
+    cmds.addCommands(intake.InNOutCmd())
+    cmds.addCommands(intake.StartBoolCmd())
     cmds.addCommands(shoot_fuel(shooter).withTimeout(10.0))
     return cmds
 
@@ -158,7 +159,8 @@ def move_shoot_right(
     transform = sp.transformBy(wpimath.geometry.Transform2d(-move, 0, rot_auto * side))
     cmds = commands2.SequentialCommandGroup()
     cmds.addCommands(drive_to_pose(transform))
-    cmds.addCommands(autoSetup(intake))
+    cmds.addCommands(intake.InNOutCmd())
+    cmds.addCommands(intake.StartBoolCmd())
     cmds.addCommands(shoot_fuel(shooter).withTimeout(5.0))
     return cmds
 
@@ -179,7 +181,8 @@ def move_shoot_left(
 
     cmds = commands2.SequentialCommandGroup()
     cmds.addCommands(drive_to_pose(transform))
-    cmds.addCommands(autoSetup(intake))
+    cmds.addCommands(intake.InNOutCmd())
+    cmds.addCommands(intake.StartBoolCmd())
     cmds.addCommands(shoot_fuel(shooter).withTimeout(5.0))
     return cmds
 
@@ -240,7 +243,7 @@ def drive_to_pose(position: Pose2d) -> commands2.Command:
 
 def shoot_fuel(shooter: subsystems.shooter.Shooter) -> commands2.Command:
     def shooter_speed():
-        return shooter.shooter_speed
+        return -1 * shooter.auto_shot_speed
     return shooter.fire_cmd(shooter_speed)
 
 def climb_up(climber: subsystems.climber.Climber) -> commands2.Command:
@@ -335,11 +338,11 @@ class AutoDashboard():
         else:
             return sit()
     
-def autoSetup(intake: subsystems.intake.Intake):
-    fullAuto = commands2.SequentialCommandGroup()
-    fullAuto.addCommands(intake.InNOutCmd())
-    fullAuto.addCommands(intake.StartBoolCmd())
-    return fullAuto
+#def autoSetup(intake: subsystems.intake.Intake):
+ #   fullAuto = commands2.SequentialCommandGroup()
+  #  fullAuto.addCommands(intake.InNOutCmd())
+   # fullAuto.addCommands(intake.StartBoolCmd())
+    #return fullAuto
     
 
 class WaitCommand(commands2.Command):

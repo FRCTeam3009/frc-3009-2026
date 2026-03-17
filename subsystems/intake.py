@@ -7,8 +7,8 @@ import phoenix6
 
 class Intake(commands2.Subsystem):
     def __init__(self):
-        self.HorizontalMotion = wpilib.DoubleSolenoid(wpilib.PneumaticsModuleType.REVPH, 0, 15) # TODO make sure the ids are good
-        self.VerticalMotion = wpilib.DoubleSolenoid(wpilib.PneumaticsModuleType.REVPH, 1, 14)
+        self.HorizontalMotion = wpilib.DoubleSolenoid(3, wpilib.PneumaticsModuleType.REVPH, 3, 12) # TODO make sure the ids are good
+        self.VerticalMotion = wpilib.DoubleSolenoid(3, wpilib.PneumaticsModuleType.REVPH, 4, 11)
         self.HorizontalMotion.set(wpilib.DoubleSolenoid.Value.kReverse)
         self.VerticalMotion.set(wpilib.DoubleSolenoid.Value.kReverse)
         self.IntakeMotor = phoenix6.hardware.TalonFX(can_ids.intake)
@@ -21,7 +21,7 @@ class Intake(commands2.Subsystem):
 
         rollers_motor_speed = -0.35
 
-        timer_time = 2
+        timer_time = 0.5
 
         self.ntcore_instance = ntcore.NetworkTableInstance.getDefault()
         self.nttable = self.ntcore_instance.getTable("Intake")

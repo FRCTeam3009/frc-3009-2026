@@ -257,14 +257,19 @@ class RobotContainer:
         self.operator_controller.y().onTrue(
             self.intake.ChangeBoolCmd()
         )
-        self.operator_controller.a().onTrue(
+        self.operator_controller.povRight().onTrue(
             self.climber.UpperLatchCmd()
         )
-        self.operator_controller.x().onTrue(
+        self.operator_controller.povLeft().onTrue(
             self.climber.LowerLatchCmd()
         )
-        self.operator_controller.start().onTrue(
-            self.climber.StabilizerCmd()
+        # self.operator_controller.start().onTrue(
+        #    self.climber.StabilizerCmd()
+        #)
+        def big_shot():
+            return -1 * self.shooter.big_shot_speed
+        self.operator_controller.rightBumper().whileTrue(
+            self.shooter.fire_cmd(big_shot)
         )
         
     
