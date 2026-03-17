@@ -55,14 +55,15 @@ class Shooter(commands2.Subsystem):
         self.motor_sim.getAbsoluteEncoderSim().setPosition(self.motor_sim.getPosition() + speed * 2)
 
     def fire_cmd(self, speed: typing.Callable[[], float]):
-        return FireCommand(self, speed)
+        return FireCommand(self, speed, self.intake)
     
     def idle_cmd(self):
         return IdleCommand(self, self.intake)
 
 class FireCommand(commands2.Command):
-    def __init__(self, shooter: Shooter, speed: typing.Callable[[], float]):
+    def __init__(self, shooter: Shooter, speed: typing.Callable[[], float], intake: subsystems.intake.Intake):
         self.addRequirements(shooter)
+        self.intake = intake
         self.shooter = shooter
         self.speed = speed
 
@@ -70,6 +71,10 @@ class FireCommand(commands2.Command):
         # Start running the shooter motor
         shooter_speed = self.shooter.motor_speed_subscribe.get()
         self.shooter.move(self.speed() * shooter_speed)
+
+        # Start running the rollers to pull balls into the shooter
+        self.intake.is_running = True
+        self.intake.RunRollers()
 
         # Wait until the shooter motor is up to speed before loading balls into it.
         current_speed = -1 * self.shooter.motor.getEncoder().getVelocity()

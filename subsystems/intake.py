@@ -79,6 +79,9 @@ class Intake(commands2.Subsystem):
     def telemtry(self):
         self.roller_publish.set(self.is_running)
     
+    def RunRollers(self):
+        self.rollers.set(self.rollers_speed_subscribe.get())
+
 class InNOutCommand(commands2.Command):
     def __init__(self, intake: Intake):
         self.addRequirements(intake)
@@ -136,7 +139,7 @@ class IntakeCommand(commands2.Command):
     def execute(self):
         if self.intake.is_running:
             self.intake.IntakeMotor.set(self.intake.motor_speed_subscribe.get())
-            self.intake.rollers.set(self.intake.rollers_speed_subscribe.get())
+            self.intake.RunRollers()
         else:
             self.intake.IntakeMotor.set(0)
             self.intake.rollers.set(0)
