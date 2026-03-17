@@ -10,7 +10,6 @@ class Climber(commands2.Subsystem):
     def __init__(self):
         self.climber_motor = phoenix6.hardware.TalonFX(can_ids.climber)
 
-        # TODO make sure IDs are good.
         self.latches = wpilib.DoubleSolenoid(3, wpilib.PneumaticsModuleType.REVPH, 1, 14) # Claws up/down
         self.arms = wpilib.DoubleSolenoid(3, wpilib.PneumaticsModuleType.REVPH, 2, 13) # Arms open/close
         # self.stabilizer = wpilib.DoubleSolenoid(3, wpilib.PneumaticsModuleType.REVPH, 4, 11) # Stabilizer in/out

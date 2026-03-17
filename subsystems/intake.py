@@ -73,6 +73,9 @@ class Intake(commands2.Subsystem):
     def StartBoolCmd(self) -> StartBool:
         return StartBool(self)
     
+    def IntakeActiveCmd(self) -> IntakeActive:
+        return IntakeActive(self)
+    
     def telemtry(self):
         self.roller_publish.set(self.is_running)
     
@@ -157,3 +160,17 @@ class ChangeBool(commands2.Command):
 
     def isFinished(self) -> bool:
         return True
+    
+
+class IntakeActive(commands2.Command):
+    def __init__(self, intake: Intake):
+        self.addRequirements(intake)
+        self.intake = intake
+
+    def execute(self):
+        if self.intake.HorizontalState() == wpilib.DoubleSolenoid.Value.kForward:
+            self.intake.VerticalToggle()
+
+    def isFinished(self) -> bool:
+        return True
+

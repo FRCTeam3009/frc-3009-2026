@@ -266,6 +266,9 @@ class RobotContainer:
         # self.operator_controller.start().onTrue(
         #    self.climber.StabilizerCmd()
         #)
+        self.operator_controller.rightBumper().onTrue(
+           self.intake.IntakeActiveCmd() 
+        )
         def big_shot():
             return -1 * self.shooter.big_shot_speed
         self.operator_controller.rightBumper().whileTrue(
