@@ -234,11 +234,11 @@ class RobotContainer:
         self.drivetrain.register_telemetry(telemetry_func)
         
         self.operator_controller.rightTrigger().whileTrue(
-            self.shooter.fire_cmd(-1 * self.shooter.shooter_speed)
+            self.shooter.fire_cmd(self.shooter.shooter_speed)
         )
         
         self.operator_controller.leftTrigger().whileTrue(
-            self.shooter.fire_cmd(self.shooter.backwards_speed)
+            self.shooter.backwards_cmd(self.shooter.backwards_speed)
         )
 
         self.operator_controller.povUp().whileTrue(
@@ -283,5 +283,6 @@ class RobotContainer:
         self.periodic_timer.reset()
         self.front_limelight.telemetry()
         self.intake.telemtry()
+        self.shooter.telemetry()
 
         

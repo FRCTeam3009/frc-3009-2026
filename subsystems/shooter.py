@@ -6,28 +6,34 @@ import typing
 import ntcore
 import can_ids
 import subsystems.intake
+import wpimath.controller
 
 class Shooter(commands2.Subsystem):
 
     def __init__(self, intake: subsystems.intake.Intake):
         self.motor = rev.SparkMax(can_ids.shooter, rev.SparkLowLevel.MotorType.kBrushless)
         self.motor_sim = rev.SparkSim(self.motor, wpimath.system.plant.DCMotor.NEO(1))
+        self.max_speed = 6784 # Spark Neo Vortex free speed RPMs
+        self.motor_bang_bang = wpimath.controller.BangBangController(0.025)
 
         self.ramp_motor = rev.SparkMax(can_ids.ramp, rev.SparkLowLevel.MotorType.kBrushless)
         self.ramp_motor_sim = rev.SparkSim(self.ramp_motor, wpimath.system.plant.DCMotor.NEO(1))
 
-        self.backwards_speed = 1500
+        self.backwards_speed = 0.25 # 1500
 
         self.ntcore_instance = ntcore.NetworkTableInstance.getDefault()
         self.shooter_table = self.ntcore_instance.getTable("Shooter")
 
         # RPMs for the speed of the shooter motor. (e.g. 3000)
-        self.max_speed = 6784 # Spark Neo Vortex free speed RPMs
-        self.shooter_speed = 3000
-        self.shooter_topic = self.shooter_table.getFloatTopic("MotorSpeed")
-        self.motor_speed_publish = self.shooter_topic.publish()
+        self.shooter_speed = 3500
+        self.motor_speed_topic = self.shooter_table.getFloatTopic("MotorSpeed")
+        self.motor_speed_publish = self.motor_speed_topic.publish()
         self.motor_speed_publish.set(self.shooter_speed)
-        self.motor_speed_subscribe = self.shooter_topic.subscribe(self.shooter_speed)
+        self.motor_speed_subscribe = self.motor_speed_topic.subscribe(self.shooter_speed)
+
+        self.current_motor_speed_topic = self.shooter_table.getFloatTopic("CurrentMotorSpeed")
+        self.current_motor_speed_publish = self.current_motor_speed_topic.publish()
+        self.current_motor_speed_publish.set(0.0)
 
         self.big_shot_speed = 5000
         self.big_shot_topic = self.shooter_table.getFloatTopic("BigShotSpeed")
@@ -45,26 +51,33 @@ class Shooter(commands2.Subsystem):
 
         self.intake = intake
     
-    def move(self, speed: float):
-        # Speed is in RPMs, so convert to 1.0 range
-        speed = speed / self.max_speed
-
+    # set_speed simply sets the motor speed directly.
+    def set_speed(self, speed: float):
         self.motor.set(speed)
         self.motor_sim.setAppliedOutput(speed)
         self.motor_sim.setPosition(self.motor_sim.getPosition() + speed * 2)
         self.motor_sim.getAbsoluteEncoderSim().setPosition(self.motor_sim.getPosition() + speed * 2)
 
+    # set_flywheel tries to maintain speed using a BangBangController
+    def set_flywheel(self, speed: float):
+        current_speed = self.motor.getEncoder().getVelocity()
+        val = self.motor_bang_bang.calculate(current_speed, speed)
+        self.set_speed(val)
+
     def fire_cmd(self, speed: float):
         return FireCommand(self, speed, self.intake)
+    
+    def backwards_cmd(self, speed: float):
+        return BackwardsCommand(self, speed, self.intake)
     
     def idle_cmd(self):
         return IdleCommand(self, self.intake)
     
-    def at_speed(self, speed: float) -> bool:
-        v = self.motor.getEncoder().getVelocity()
-
-        # Check if we're within some boundary slack of RPMs
-        return abs(v - speed) < 200
+    def at_speed(self) -> bool:
+        return self.motor_bang_bang.atSetpoint()
+    
+    def telemetry(self):
+        self.current_motor_speed_publish.set(self.motor.getEncoder().getVelocity())
 
 class FireCommand(commands2.Command):
     def __init__(self, shooter: Shooter, speed: float, intake: subsystems.intake.Intake):
@@ -79,22 +92,35 @@ class FireCommand(commands2.Command):
         self.intake.is_running = True
         self.intake.RunRollers()
 
+         # Start running the shooter motor
+        self.shooter.set_flywheel(self.speed)
+
         # Wait until the shooter motor is up to speed before loading balls into it.
         ramp_motor_speed = self.shooter.ramp_motor_speed_subscribe.get()
-
-         # Start running the shooter motor
-        self.shooter.move(self.speed)
-
-        backwards = self.speed > 0 # Motor is inverted
-
-        if self.shooter.at_speed(self.speed):
+        if self.shooter.at_speed():
             self.shooter.ramp_motor.set(ramp_motor_speed)
-        elif backwards:
-            self.shooter.ramp_motor.set(-1 * ramp_motor_speed)
-            self.intake.RunRollersBackwards()
+        else:
+            self.shooter.ramp_motor.set(0)           
 
     def end(self, interrupted: bool):
-        self.shooter.move(0)
+        self.shooter.set_speed(0)
+        self.shooter.ramp_motor.set(0)
+
+class BackwardsCommand(commands2.Command):
+    def __init__(self, shooter: Shooter, speed: float, intake: subsystems.intake.Intake):
+        self.addRequirements(shooter)
+        self.shooter = shooter
+        self.intake = intake
+        self.speed = speed
+
+    def execute(self):
+        ramp_motor_speed = self.shooter.ramp_motor_speed_subscribe.get()
+        self.shooter.ramp_motor.set(-1 * ramp_motor_speed)
+        self.intake.RunRollersBackwards()
+        self.shooter.set_speed(-1 * self.speed)
+
+    def end(self, interrupted: bool):
+        self.shooter.set_speed(0)
         self.shooter.ramp_motor.set(0)
 
 class IdleCommand(commands2.Command):
