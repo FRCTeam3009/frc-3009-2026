@@ -234,7 +234,7 @@ class RobotContainer:
         self.drivetrain.register_telemetry(telemetry_func)
         
         self.operator_controller.rightTrigger().whileTrue(
-            self.shooter.fire_cmd(self.shooter.shooter_speed)
+            self.shooter.fire_cmd(self.shooter.get_shooter_speed)
         )
         
         self.operator_controller.leftTrigger().whileTrue(
@@ -266,7 +266,7 @@ class RobotContainer:
            self.intake.IntakeActiveCmd() 
         )
         self.operator_controller.rightBumper().whileTrue(
-            self.shooter.fire_cmd(-1 * self.shooter.big_shot_speed)
+            self.shooter.fire_cmd(self.shooter.get_big_shot_speed)
         )
         
     

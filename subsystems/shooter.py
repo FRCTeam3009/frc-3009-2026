@@ -14,7 +14,7 @@ class Shooter(commands2.Subsystem):
         self.motor = rev.SparkMax(can_ids.shooter, rev.SparkLowLevel.MotorType.kBrushless)
         self.motor_sim = rev.SparkSim(self.motor, wpimath.system.plant.DCMotor.NEO(1))
         self.max_speed = 6784 # Spark Neo Vortex free speed RPMs
-        self.motor_bang_bang = wpimath.controller.BangBangController(0.025)
+        self.motor_bang_bang = wpimath.controller.BangBangController()
 
         self.ramp_motor = rev.SparkMax(can_ids.ramp, rev.SparkLowLevel.MotorType.kBrushless)
         self.ramp_motor_sim = rev.SparkSim(self.ramp_motor, wpimath.system.plant.DCMotor.NEO(1))
@@ -25,7 +25,7 @@ class Shooter(commands2.Subsystem):
         self.shooter_table = self.ntcore_instance.getTable("Shooter")
 
         # RPMs for the speed of the shooter motor. (e.g. 3000)
-        self.shooter_speed = 3500
+        self.shooter_speed = 3000
         self.motor_speed_topic = self.shooter_table.getFloatTopic("MotorSpeed")
         self.motor_speed_publish = self.motor_speed_topic.publish()
         self.motor_speed_publish.set(self.shooter_speed)
@@ -58,13 +58,19 @@ class Shooter(commands2.Subsystem):
         self.motor_sim.setPosition(self.motor_sim.getPosition() + speed * 2)
         self.motor_sim.getAbsoluteEncoderSim().setPosition(self.motor_sim.getPosition() + speed * 2)
 
+    def get_shooter_speed(self):
+        return self.motor_speed_subscribe.get()
+    
+    def get_big_shot_speed(self):
+        return self.big_shot_subscribe.get()
+
     # set_flywheel tries to maintain speed using a BangBangController
     def set_flywheel(self, speed: float):
         current_speed = self.motor.getEncoder().getVelocity()
         val = self.motor_bang_bang.calculate(current_speed, speed)
         self.set_speed(val)
 
-    def fire_cmd(self, speed: float):
+    def fire_cmd(self, speed: typing.Callable[[], float]):
         return FireCommand(self, speed, self.intake)
     
     def backwards_cmd(self, speed: float):
@@ -73,14 +79,16 @@ class Shooter(commands2.Subsystem):
     def idle_cmd(self):
         return IdleCommand(self, self.intake)
     
-    def at_speed(self) -> bool:
-        return self.motor_bang_bang.atSetpoint()
+    def up_to_speed(self, speed: float) -> bool:
+        velocity = self.motor.getEncoder().getVelocity()
+
+        return velocity > speed
     
     def telemetry(self):
         self.current_motor_speed_publish.set(self.motor.getEncoder().getVelocity())
 
 class FireCommand(commands2.Command):
-    def __init__(self, shooter: Shooter, speed: float, intake: subsystems.intake.Intake):
+    def __init__(self, shooter: Shooter, speed: typing.Callable[[], float], intake: subsystems.intake.Intake):
         self.addRequirements(shooter)
         self.addRequirements(intake)
         self.intake = intake
@@ -93,11 +101,11 @@ class FireCommand(commands2.Command):
         self.intake.RunRollers()
 
          # Start running the shooter motor
-        self.shooter.set_flywheel(self.speed)
+        self.shooter.set_flywheel(self.speed())
 
         # Wait until the shooter motor is up to speed before loading balls into it.
         ramp_motor_speed = self.shooter.ramp_motor_speed_subscribe.get()
-        if self.shooter.at_speed():
+        if self.shooter.up_to_speed(self.speed()):
             self.shooter.ramp_motor.set(ramp_motor_speed)
         else:
             self.shooter.ramp_motor.set(0)           
