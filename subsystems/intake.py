@@ -4,6 +4,7 @@ import rev
 import can_ids
 import ntcore
 import phoenix6
+import math
 
 class Intake(commands2.Subsystem):
     def __init__(self):
@@ -19,7 +20,7 @@ class Intake(commands2.Subsystem):
 
         intake_motor_speed = -1
 
-        rollers_motor_speed = -0.35
+        rollers_motor_speed = -0.4
 
         timer_time = 0.5
 
@@ -79,8 +80,8 @@ class Intake(commands2.Subsystem):
     def telemtry(self):
         self.roller_publish.set(self.is_running)
     
-    def RunRollers(self):
-        self.rollers.set(self.rollers_speed_subscribe.get())
+    def RunRollers(self, speed):
+        self.rollers.set(speed)
 
     def RunRollersBackwards(self):
         self.rollers.set(self.rollers_speed_subscribe.get() * -1)
@@ -138,14 +139,23 @@ class IntakeCommand(commands2.Command):
     def __init__(self, intake: Intake):
         self.addRequirements(intake)
         self.intake = intake
+        self.timer_rollers = wpilib.Timer()
 
     def execute(self):
+        self.timer_rollers.start()
         if self.intake.is_running:
             self.intake.IntakeMotor.set(self.intake.motor_speed_subscribe.get())
-            self.intake.RunRollers()
+            if math.floor(self.timer_rollers.get() * 3) % 2 == 0:
+                self.intake.RunRollers(-0.25)
+            else:
+                self.intake.RunRollers(-0.5)
         else:
             self.intake.IntakeMotor.set(0)
             self.intake.rollers.set(0)
+
+    def end(self, interrupted: bool):
+        self.timer_rollers.stop()
+        self.timer_rollers.reset()
 
 class StartBool(commands2.Command):
     def __init__(self, intake: Intake):
