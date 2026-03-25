@@ -25,15 +25,12 @@ class Shooter(commands2.Subsystem):
         self.shooter_table = self.ntcore_instance.getTable("Shooter")
 
         self.kS = 0.016
-        self.kV = 0
+        self.kV = 0.000195 # TODO update after tuning
         self.motor_tune_topic = self.shooter_table.getFloatTopic("MotorTuning")
         self.motor_tune_publish = self.motor_tune_topic.publish()
         self.motor_tune_publish.set(self.kV)
         self.motor_tune_subscribe = self.motor_tune_topic.subscribe(self.kV)
         self.kA = 0
-        self.kP = 0
-        self.kI = 0
-        self.kD = 0
 
         # RPMs for the speed of the shooter motor. (e.g. 3000)
         self.shooter_speed = 3000
@@ -78,15 +75,17 @@ class Shooter(commands2.Subsystem):
     # set_flywheel tries to maintain speed using a BangBangController
     def set_flywheel(self, speed: float):
         current_speed = self.motor.getEncoder().getVelocity()
-        val = self.motor_bang_bang.calculate(current_speed, speed)
         motor_feedforward = wpimath.controller.SimpleMotorFeedforwardRadians(self.kS, self.motor_tune_subscribe.get(), self.kA)
-        motor_pid = wpimath.controller.PIDController(self.kP, self.kI, self.kD)
-        # val = motor_pid.calculate(current_speed, speed) + motor_feedforward.calculate(current_speed)
+        # TODO only tuning the feed forward for now. Find the value that lets it get up to speed without overshooting.
+        # bangbang = self.motor_bang_bang.calculate(current_speed, speed)
+        # ff = motor_feedforward.calculate(speed)
+        # TODO val = bangbang + 0.9 * ff
+        val = motor_feedforward.calculate(speed)
         print(current_speed)
         self.set_speed(val)
 
     def fire_cmd(self, speed: typing.Callable[[], float]):
-        return FireCommand(self, speed, self.intake)
+        return FireCommand(self, speed)
     
     def backwards_cmd(self, speed: float):
         return BackwardsCommand(self, speed, self.intake)
@@ -103,18 +102,12 @@ class Shooter(commands2.Subsystem):
         self.current_motor_speed_publish.set(self.motor.getEncoder().getVelocity())
 
 class FireCommand(commands2.Command):
-    def __init__(self, shooter: Shooter, speed: typing.Callable[[], float], intake: subsystems.intake.Intake):
+    def __init__(self, shooter: Shooter, speed: typing.Callable[[], float]):
         self.addRequirements(shooter)
-        self.addRequirements(intake)
-        self.intake = intake
         self.shooter = shooter
         self.speed = speed
 
     def execute(self):
-        # Start running the rollers to pull balls into the shooter
-        #self.intake.is_running = True
-        #self.intake.RunRollers()
-
          # Start running the shooter motor
         self.shooter.set_flywheel(self.speed())
 
