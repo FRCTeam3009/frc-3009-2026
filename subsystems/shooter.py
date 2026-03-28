@@ -10,7 +10,7 @@ import wpimath.controller
 
 class Shooter(commands2.Subsystem):
 
-    def __init__(self, intake: subsystems.intake.Intake):
+    def __init__(self):
         self.motor = rev.SparkMax(can_ids.shooter, rev.SparkLowLevel.MotorType.kBrushless)
         self.motor_sim = rev.SparkSim(self.motor, wpimath.system.plant.DCMotor.NEO(1))
         self.max_speed = 6784 # Spark Neo Vortex free speed RPMs
@@ -25,12 +25,9 @@ class Shooter(commands2.Subsystem):
         self.shooter_table = self.ntcore_instance.getTable("Shooter")
 
         self.kS = 0.016
-        self.kV = 0.000195 # TODO update after tuning
-        self.motor_tune_topic = self.shooter_table.getFloatTopic("MotorTuning")
-        self.motor_tune_publish = self.motor_tune_topic.publish()
-        self.motor_tune_publish.set(self.kV)
-        self.motor_tune_subscribe = self.motor_tune_topic.subscribe(self.kV)
+        self.kV = 0.000135
         self.kA = 0
+        self.motor_feedforward = wpimath.controller.SimpleMotorFeedforwardRadians(self.kS, self.kV, self.kA)
 
         # RPMs for the speed of the shooter motor. (e.g. 3000)
         self.shooter_speed = 3000
@@ -56,8 +53,6 @@ class Shooter(commands2.Subsystem):
         self.ramp_motor_speed_publish = self.ramp_motor_speed_topic.publish()
         self.ramp_motor_speed_publish.set(self.ramp_motor_speed)
         self.ramp_motor_speed_subscribe = self.ramp_motor_speed_topic.subscribe(self.ramp_motor_speed)
-
-        self.intake = intake
     
     # set_speed simply sets the motor speed directly.
     def set_speed(self, speed: float):
@@ -75,23 +70,19 @@ class Shooter(commands2.Subsystem):
     # set_flywheel tries to maintain speed using a BangBangController
     def set_flywheel(self, speed: float):
         current_speed = self.motor.getEncoder().getVelocity()
-        motor_feedforward = wpimath.controller.SimpleMotorFeedforwardRadians(self.kS, self.motor_tune_subscribe.get(), self.kA)
-        # TODO only tuning the feed forward for now. Find the value that lets it get up to speed without overshooting.
-        # bangbang = self.motor_bang_bang.calculate(current_speed, speed)
-        # ff = motor_feedforward.calculate(speed)
-        # TODO val = bangbang + 0.9 * ff
-        val = motor_feedforward.calculate(speed)
-        print(current_speed)
+        bangbang = self.motor_bang_bang.calculate(current_speed, speed)
+        ff = self.motor_feedforward.calculate(speed)
+        val = bangbang + 0.9 * ff
         self.set_speed(val)
 
     def fire_cmd(self, speed: typing.Callable[[], float]):
         return FireCommand(self, speed)
     
-    def backwards_cmd(self, speed: float):
-        return BackwardsCommand(self, speed, self.intake)
+    def backwards_cmd(self, intake: subsystems.intake.Intake, speed: float):
+        return BackwardsCommand(self, speed, intake)
     
-    def idle_cmd(self):
-        return IdleCommand(self, self.intake)
+    def idle_cmd(self, intake: subsystems.intake.Intake):
+        return IdleCommand(self, intake)
     
     def up_to_speed(self, speed: float) -> bool:
         velocity = self.motor.getEncoder().getVelocity()
@@ -133,6 +124,7 @@ class BackwardsCommand(commands2.Command):
         ramp_motor_speed = self.shooter.ramp_motor_speed_subscribe.get()
         self.shooter.ramp_motor.set(-1 * ramp_motor_speed)
         self.intake.RunRollersBackwards()
+        self.intake.RunIntakeBackwards()
         self.shooter.set_speed(-1 * self.speed)
 
     def end(self, interrupted: bool):

@@ -17,9 +17,9 @@ import subsystems.intake
 import subsystems.autoEndHubRB
 import typing
 
-auto_movement = wpimath.units.inchesToMeters(75)
+auto_movement = wpimath.units.inchesToMeters(70)
 # side_start is middle of the ramp
-side_start = wpimath.units.inchesToMeters(65)
+side_start = wpimath.units.inchesToMeters(55)
 speed_auto = 0.50
 climber_offset = 0.2032
 
@@ -34,8 +34,8 @@ positions[4] = Pose2d(14.846, 4.752, Rotation2d.fromDegrees(180)) # Red Climb Ri
 # TODO you can use should_mirror() and mirror_position() to flip, then just define the Blue sides.
 
 # Manual center start pose when not trusting the limelights
-positions[5] = Pose2d(wpimath.units.inchesToMeters(140), # 140
-                      wpimath.units.inchesToMeters(156.06), # 156.06
+positions[5] = Pose2d(wpimath.units.inchesToMeters(140.0),
+                      wpimath.units.inchesToMeters(158.84),
                       Rotation2d.fromDegrees(0))
 
 positions[7] = Pose2d(14.92, 4.04, Rotation2d.fromDegrees(180)) # Red Coral
@@ -60,6 +60,12 @@ positions[25] = Pose2d(5.00, 5.27, Rotation2d.fromDegrees(-120)) #blueleft
 positions[26] = Pose2d(5.00, 2.85, Rotation2d.fromDegrees(120)) #blue right
 positions[27] = Pose2d(12.55, 2.82, Rotation2d.fromDegrees(60)) #red left
 positions[28] = Pose2d(12.57, 5.24, Rotation2d.fromDegrees(-60)) #red right
+
+def get_default_start_pose() -> Pose2d:
+    pose = positions[5]
+    if should_mirror():
+        pose = mirror_position(pose)
+    return pose
 
 # We'll assign positions based on the Blue side.
 # If we're on the Red side, we can use mirror_position() to flip.
@@ -86,18 +92,17 @@ def auto_move_back() -> float:
 back_move_sideways = auto_move_back()
 
 def get_rotation() -> float:
-    return math.acos(side_start / auto_movement)
+    # Recenter the triangle to the center of the hub rather than the robot start pose.
+    back = auto_movement + wpimath.units.inchesToMeters(38)
+    return math.asin(side_start / back)
 
 rot_auto = get_rotation()
 
 # start_pose is used for the auto modes that don't use the limelights.
 # This gives us an estimate starting position.
 def start_pose(drivetrain: subsystems.command_swerve_drivetrain.CommandSwerveDrivetrain, offset: float) -> Pose2d:
-    starting_position = positions[5]
+    starting_position = get_default_start_pose()
     sp = starting_position.transformBy(wpimath.geometry.Transform2d(0, offset, 0))
-
-    if should_mirror():
-        sp = mirror_position(sp)
     drivetrain.reset_pose(sp)
 
     return sp
@@ -157,6 +162,7 @@ def move_shoot_right(
 
     sp = start_pose(drivetrain, -1 * side * side_start)
     transform = sp.transformBy(wpimath.geometry.Transform2d(-move, 0, rot_auto * side))
+
     cmds = commands2.SequentialCommandGroup()
     cmds.addCommands(drive_to_pose(transform))
     cmds.addCommands(intake.InNOutCmd())

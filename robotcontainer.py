@@ -68,7 +68,7 @@ class RobotContainer:
 
         self.drivetrain = TunerConstants.create_drivetrain()
 
-        self.drivetrain.reset_pose(wpimath.geometry.Pose2d(10, 2, 0))
+        self.drivetrain.reset_pose(automodes.get_default_start_pose())
 
         self.front_limelight = subsystems.limelight.Limelight("limelight-front", self.drivetrain)
 
@@ -89,9 +89,9 @@ class RobotContainer:
         commands2.CommandScheduler.getInstance().registerSubsystem(self.intake)
         self.intake.setDefaultCommand(self.intake.IntakeCmd())
         
-        self.shooter = subsystems.shooter.Shooter(self.intake)
+        self.shooter = subsystems.shooter.Shooter()
         commands2.CommandScheduler.getInstance().registerSubsystem(self.shooter)
-        self.shooter.setDefaultCommand(self.shooter.idle_cmd())
+        self.shooter.setDefaultCommand(self.shooter.idle_cmd(self.intake))
         
         self.climber = subsystems.climber.Climber()
         commands2.CommandScheduler.getInstance().registerSubsystem(self.climber)
@@ -238,7 +238,7 @@ class RobotContainer:
         )
         
         self.operator_controller.leftTrigger().whileTrue(
-            self.shooter.backwards_cmd(self.shooter.backwards_speed)
+            self.shooter.backwards_cmd(self.intake, self.shooter.backwards_speed)
         )
 
         self.operator_controller.povUp().whileTrue(

@@ -85,6 +85,9 @@ class Intake(commands2.Subsystem):
 
     def RunRollersBackwards(self):
         self.rollers.set(self.rollers_speed_subscribe.get() * -1)
+    
+    def RunIntakeBackwards(self):
+        self.IntakeMotor.set(-1 * self.motor_speed_subscribe.get())
 
 class InNOutCommand(commands2.Command):
     def __init__(self, intake: Intake):
