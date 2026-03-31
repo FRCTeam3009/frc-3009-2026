@@ -341,13 +341,6 @@ class AutoDashboard():
             return red_climb_left(climber)
         else:
             return sit()
-    
-#def autoSetup(intake: subsystems.intake.Intake):
- #   fullAuto = commands2.SequentialCommandGroup()
-  #  fullAuto.addCommands(intake.InNOutCmd())
-   # fullAuto.addCommands(intake.StartBoolCmd())
-    #return fullAuto
-    
 
 class WaitCommand(commands2.Command):
     def __init__(self, drivetrain: subsystems.command_swerve_drivetrain.CommandSwerveDrivetrain):

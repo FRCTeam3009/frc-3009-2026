@@ -9,9 +9,15 @@ import subsystems.limelight_positions
 import json
 import typing
 import phoenix6.utils
+import math
+import automodes
 
 APRIL_TAG_OFFSET = 0.56
 CORAL_OFFSET = wpimath.units.inchesToMeters(-2.5)
+HUB_BLUE_POS = wpimath.geometry.Pose2d(
+    wpimath.units.inchesToMeters(182.11), 
+    wpimath.units.inchesToMeters(158.84), 
+    0)
 
 class Limelight(object):
     def __init__(self, name: str, drive_train: subsystems.command_swerve_drivetrain.CommandSwerveDrivetrain):
@@ -75,8 +81,24 @@ class Limelight(object):
         self.limelight_pose_publish = self.limelight_pose_topic.publish()
         self.limelight_pose_publish.set(wpimath.geometry.Pose2d())
 
+        self.hub_dist_topic = self.table.getFloatTopic("hubDist")
+        self.hub_dist_publish = self.hub_dist_topic.publish()
+        self.hub_dist_publish.set(0.0)
+
     def update_command(self) -> commands2.Command:
         return commands2.cmd.run(self.update).repeatedly().ignoringDisable(True)
+
+    def distanceToHub(self) -> None:
+        tartgetHub = HUB_BLUE_POS
+        if automodes.should_mirror():
+            tartgetHub = automodes.mirror_position(tartgetHub)
+
+        currentPose = self.drive_train.get_state_copy().pose
+        yDistance = tartgetHub.Y() - currentPose.Y()
+        xDistance = tartgetHub.X() - currentPose.X()
+        totalDistance = math.sqrt(math.pow(yDistance, 2) + math.pow(xDistance, 2))
+        distanceDisplay = round(wpimath.units.metersToFeet(totalDistance), 2)
+        self.hub_dist_publish.set(distanceDisplay)
 
     def update(self):
         # Estimate bot position
@@ -84,7 +106,7 @@ class Limelight(object):
         botpose2d = subsystems.limelight_positions.pose2d_from_botpose(botpose)
         if not subsystems.limelight_positions.is_pose2d_zero(botpose2d):
             self.odometry_update(botpose2d)
-
+        self.distanceToHub()
         # Update AprilTag target positions
         json_str = self.json_subscribe.get()
         if json_str is None or json_str == "":
