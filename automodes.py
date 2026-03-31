@@ -70,8 +70,7 @@ def get_default_start_pose() -> Pose2d:
 # We'll assign positions based on the Blue side.
 # If we're on the Red side, we can use mirror_position() to flip.
 def should_mirror() -> bool:
-    return False
-    #return wpilib.DriverStation.getAlliance() != wpilib.DriverStation.Alliance.kBlue
+    return wpilib.DriverStation.getAlliance() != wpilib.DriverStation.Alliance.kBlue
 
 def mirror_position(input: Pose2d) -> Pose2d:
     maxX = wpimath.units.inchesToMeters(650.12)
