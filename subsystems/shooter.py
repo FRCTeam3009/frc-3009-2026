@@ -82,9 +82,11 @@ class Shooter(commands2.Subsystem):
     def set_flywheel(self, speed: float):
         current_speed = self.motor.getEncoder().getVelocity()
         bangbang = self.motor_bang_bang.calculate(current_speed, speed)
-        ff = self.motor_feedforward.calculate(speed)
-        val = bangbang + 0.9 * ff
-        self.set_speed(val)
+        bangbang = bangbang * 0.5
+        #ff = self.motor_feedforward.calculate(speed)
+        #val = bangbang + 0.9 * ff
+        #self.set_speed(val)
+        self.set_speed(bangbang)
 
     def fire_cmd(self, speed: typing.Callable[[], float]):
         return FireCommand(self, speed)
