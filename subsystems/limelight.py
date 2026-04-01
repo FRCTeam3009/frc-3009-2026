@@ -18,6 +18,7 @@ HUB_BLUE_POS = wpimath.geometry.Pose2d(
     wpimath.units.inchesToMeters(182.11), 
     wpimath.units.inchesToMeters(158.84), 
     0)
+TARGET_DISTANCE = wpimath.units.inchesToMeters(84)
 
 class Limelight(object):
     def __init__(self, name: str, drive_train: subsystems.command_swerve_drivetrain.CommandSwerveDrivetrain):
@@ -85,6 +86,10 @@ class Limelight(object):
         self.hub_dist_publish = self.hub_dist_topic.publish()
         self.hub_dist_publish.set(0.0)
 
+        self.within_range_topic = self.table.getBooleanTopic("FIRE!!!")
+        self.within_range_publish = self.within_range_topic.publish()
+        self.within_range_publish.set(False)
+
     def update_command(self) -> commands2.Command:
         return commands2.cmd.run(self.update).repeatedly().ignoringDisable(True)
 
@@ -99,6 +104,12 @@ class Limelight(object):
         totalDistance = math.sqrt(math.pow(yDistance, 2) + math.pow(xDistance, 2))
         distanceDisplay = round(wpimath.units.metersToFeet(totalDistance), 2)
         self.hub_dist_publish.set(distanceDisplay)
+
+        buffer = wpimath.units.inchesToMeters(12.0)
+        if totalDistance < TARGET_DISTANCE + buffer and totalDistance > TARGET_DISTANCE - buffer:
+            self.within_range_publish.set(True)
+        else:
+            self.within_range_publish.set(False)
 
     def update(self):
         # Estimate bot position

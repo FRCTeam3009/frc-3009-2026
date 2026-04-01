@@ -21,7 +21,8 @@ encoder_offsets_front_right = 0.39404296875
 encoder_offsets_back_left = -0.12109375
 encoder_offsets_back_right = -0.498046875
 
-shooter = 10 # spark flex
+shooter = 21 # spark flex
+secondary_shooter = 22 # spark flex
 climber = 35 # talon
 ramp = 42 # spark, the one that loads balls into the shooter
 intake = 7 # talon, the one that picks ball up off the ground

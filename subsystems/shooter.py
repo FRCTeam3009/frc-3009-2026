@@ -13,6 +13,8 @@ class Shooter(commands2.Subsystem):
     def __init__(self):
         self.motor = rev.SparkMax(can_ids.shooter, rev.SparkLowLevel.MotorType.kBrushless)
         self.motor_sim = rev.SparkSim(self.motor, wpimath.system.plant.DCMotor.NEO(1))
+        self.secondarymotor = rev.SparkMax(can_ids.secondary_shooter, rev.SparkLowLevel.MotorType.kBrushless)
+        self.secondarymotor_sim = rev.SparkSim(self.secondarymotor, wpimath.system.plant.DCMotor.NEO(1))
         self.max_speed = 6784 # Spark Neo Vortex free speed RPMs
         self.motor_bang_bang = wpimath.controller.BangBangController()
 
@@ -40,6 +42,10 @@ class Shooter(commands2.Subsystem):
         self.current_motor_speed_publish = self.current_motor_speed_topic.publish()
         self.current_motor_speed_publish.set(0.0)
 
+        self.secondary_current_motor_speed_topic = self.shooter_table.getFloatTopic("CurrentSecondaryMotorSpeed")
+        self.secondary_current_motor_speed_publish = self.secondary_current_motor_speed_topic.publish()
+        self.secondary_current_motor_speed_publish.set(0.0)
+
         self.big_shot_speed = 5000
         self.big_shot_topic = self.shooter_table.getFloatTopic("BigShotSpeed")
         self.big_shot_publish = self.big_shot_topic.publish()
@@ -60,6 +66,11 @@ class Shooter(commands2.Subsystem):
         self.motor_sim.setAppliedOutput(speed)
         self.motor_sim.setPosition(self.motor_sim.getPosition() + speed * 2)
         self.motor_sim.getAbsoluteEncoderSim().setPosition(self.motor_sim.getPosition() + speed * 2)
+
+        self.secondarymotor.set(speed)
+        self.secondarymotor_sim.setAppliedOutput(speed)
+        self.secondarymotor_sim.setPosition(self.secondarymotor_sim.getPosition() + speed * 2)
+        self.secondarymotor_sim.getAbsoluteEncoderSim().setPosition(self.secondarymotor_sim.getPosition() + speed * 2)
 
     def get_shooter_speed(self):
         return self.motor_speed_subscribe.get()
