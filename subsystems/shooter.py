@@ -80,14 +80,12 @@ class Shooter(commands2.Subsystem):
     def set_flywheel_primary(self, speed: float):
         current_speed = self.motor.getEncoder().getVelocity()
         bangbang = self.motor_bang_bang_primary.calculate(current_speed, speed)
-        bangbang = bangbang * 0.5
-        self.set_speed_primary(bangbang)
+        self.set_speed_primary(bangbang*0.8)
 
     def set_flywheel_secondary(self, speed: float):
         current_speed = self.secondarymotor.getEncoder().getVelocity()
         bangbang = self.motor_bang_bang_secondary.calculate(current_speed, speed)
-        bangbang = bangbang * 0.5
-        self.set_speed_secondary(bangbang)
+        self.set_speed_secondary(bangbang*0.8)
 
     def fire_cmd(self, speed: typing.Callable[[], float]):
         return FireCommand(self, speed)
@@ -99,12 +97,14 @@ class Shooter(commands2.Subsystem):
         return IdleCommand(self, intake)
     
     def up_to_speed(self, speed: float) -> bool:
-        velocity = self.motor.getEncoder().getVelocity()
+        velocity1 = self.motor.getEncoder().getVelocity()
+        velocity2 = self.secondarymotor.getEncoder().getVelocity()
 
-        return velocity > speed
+        return velocity1 > speed and velocity2 > speed
     
     def telemetry(self):
         self.current_motor_speed_publish.set(self.motor.getEncoder().getVelocity())
+        self.secondary_current_motor_speed_publish.set(self.secondarymotor.getEncoder().getVelocity())
 
 class FireCommand(commands2.Command):
     def __init__(self, shooter: Shooter, speed: typing.Callable[[], float]):
@@ -122,7 +122,7 @@ class FireCommand(commands2.Command):
         if self.shooter.up_to_speed(self.speed()):
             self.shooter.ramp_motor.set(ramp_motor_speed)
         else:
-            self.shooter.ramp_motor.set(0)           
+            self.shooter.ramp_motor.set(0)
 
     def end(self, interrupted: bool):
         self.shooter.set_speed_primary(0)
