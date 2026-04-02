@@ -11,6 +11,8 @@ import typing
 import phoenix6.utils
 import math
 import automodes
+import wpilib
+import subsystems.autoEndHubRB
 
 APRIL_TAG_OFFSET = 0.56
 CORAL_OFFSET = wpimath.units.inchesToMeters(-2.5)
@@ -26,6 +28,7 @@ class Limelight(object):
 
         self.nt_instance = NetworkTableInstance.getDefault()
         self.table = self.nt_instance.getTable(name)
+        self.hub_table = self.nt_instance.getTable("hub")
         # NOTE Use pose2d_from_botpose() to make this easier to deal with.
         self.botposetopic = self.table.getDoubleArrayTopic("botpose_wpiblue")
         self.botposesub = self.botposetopic.subscribe([])
@@ -82,34 +85,109 @@ class Limelight(object):
         self.limelight_pose_publish = self.limelight_pose_topic.publish()
         self.limelight_pose_publish.set(wpimath.geometry.Pose2d())
 
-        self.hub_dist_topic = self.table.getFloatTopic("hubDist")
+        self.hub_dist_topic = self.hub_table.getFloatTopic("hubDist")
         self.hub_dist_publish = self.hub_dist_topic.publish()
         self.hub_dist_publish.set(0.0)
 
-        self.within_range_topic = self.table.getBooleanTopic("FIRE!!!")
+        self.within_range_topic = self.hub_table.getBooleanTopic("inRange")
         self.within_range_publish = self.within_range_topic.publish()
         self.within_range_publish.set(False)
+
+        self.hub_angle_topic = self.hub_table.getFloatTopic("hubAngle")
+        self.hub_angle_publish = self.hub_angle_topic.publish()
+        self.hub_angle_publish.set(0.0)
+
+        self.hub_angle_aligned_topic = self.hub_table.getBooleanTopic("isAligned")
+        self.hub_angle_aligned_publish = self.hub_angle_aligned_topic.publish()
+        self.hub_angle_aligned_publish.set(False)
+
+        self.hub_in_position_topic = self.hub_table.getBooleanTopic("inPosition")
+        self.hub_in_position_publish = self.hub_in_position_topic.publish()
+        self.hub_in_position_publish.set(False)
+
+        self.hub_active_publish_topic = self.hub_table.getBooleanTopic("hubActive")
+        self.hub_active_publish = self.hub_active_publish_topic.publish()
+        self.hub_active_publish.set(False)
+
+        self.hub_timer_topic = self.hub_table.getStringTopic("hubActiveTimer")
+        self.hub_timer_publish = self.hub_timer_topic.publish()
+        self.hub_timer_publish.set("Infinite Seconds")
+
+        self.should_fire_topic = self.hub_table.getBooleanTopic("shouldFire")
+        self.should_fire_publish = self.should_fire_topic.publish()
+        self.should_fire_publish.set(False)
+
+        self.should_fire_word_topic = self.hub_table.getStringTopic("shouldFireWord")
+        self.should_fire_word_publish = self.should_fire_word_topic.publish()
+        self.should_fire_word_publish.set("HOLD")
 
     def update_command(self) -> commands2.Command:
         return commands2.cmd.run(self.update).repeatedly().ignoringDisable(True)
 
-    def distanceToHub(self) -> None:
-        tartgetHub = HUB_BLUE_POS
-        if automodes.should_mirror():
-            tartgetHub = automodes.mirror_position(tartgetHub)
+    def hubTelemetry(self) -> None:
+        # Determine whether the Hub is active and how long between states.
+        hubState = subsystems.autoEndHubRB.is_hub_active()
+        self.hub_active_publish.set(hubState)
 
+        match_time = wpilib.DriverStation.getMatchTime()
+        is_auto_enabled = wpilib.DriverStation.isAutonomousEnabled()
+        seconds = subsystems.autoEndHubRB.timeremaining(match_time, is_auto_enabled)
+        secondsStr = f"{seconds:.2f} Seconds"
+        self.hub_timer_publish.set(secondsStr)
+
+        # Get the hub we are targeting (blue or red)
+        targetHub = HUB_BLUE_POS
+        if automodes.should_mirror():
+            targetHub = automodes.mirror_position(targetHub)
+
+        # Find the distance from target
         currentPose = self.drive_train.get_state_copy().pose
-        yDistance = tartgetHub.Y() - currentPose.Y()
-        xDistance = tartgetHub.X() - currentPose.X()
+        yDistance = targetHub.Y() - currentPose.Y()
+        xDistance = targetHub.X() - currentPose.X()
         totalDistance = math.sqrt(math.pow(yDistance, 2) + math.pow(xDistance, 2))
         distanceDisplay = round(wpimath.units.metersToFeet(totalDistance), 2)
         self.hub_dist_publish.set(distanceDisplay)
 
+        # Check if we're in range
         buffer = wpimath.units.inchesToMeters(12.0)
+        inRange = False
         if totalDistance < TARGET_DISTANCE + buffer and totalDistance > TARGET_DISTANCE - buffer:
-            self.within_range_publish.set(True)
-        else:
-            self.within_range_publish.set(False)
+            inRange = True
+        self.within_range_publish.set(inRange)
+
+        # Find angle between us and target
+        currentRotation = currentPose.rotation().radians()
+        measurementPointX = math.cos(currentRotation)
+        measurementPointY = math.sin(currentRotation)
+        dotProduct = measurementPointX * xDistance + measurementPointY * yDistance
+        distanceVar = dotProduct / totalDistance 
+        goalAngle = math.acos(distanceVar)
+
+        self.hub_angle_publish.set(goalAngle * (180 / math.pi))
+
+        # Check are we aligned
+        aligned = False
+        if abs(goalAngle * (180 / math.pi)) <= 5:
+            aligned = True
+
+        self.hub_angle_aligned_publish.set(aligned)
+
+        # Are we both in-position and aligned
+        inPositionToFire = False
+        if aligned and inRange:
+            inPositionToFire = True
+        self.hub_in_position_publish.set(inPositionToFire)
+
+        # Are we in-position, aligned, and is the hub active.
+        # Only then should we fire.
+        shouldFire = False
+        shouldFireWord = "HOLD"
+        if aligned and inRange and hubState:
+            shouldFire = True
+            shouldFireWord = "FIRE!!!"
+        self.should_fire_publish.set(shouldFire)
+        self.should_fire_word_publish.set(shouldFireWord)
+        
 
     def update(self):
         # Estimate bot position
@@ -117,7 +195,7 @@ class Limelight(object):
         botpose2d = subsystems.limelight_positions.pose2d_from_botpose(botpose)
         if not subsystems.limelight_positions.is_pose2d_zero(botpose2d):
             self.odometry_update(botpose2d)
-        self.distanceToHub()
+        self.hubTelemetry()
         # Update AprilTag target positions
         json_str = self.json_subscribe.get()
         if json_str is None or json_str == "":

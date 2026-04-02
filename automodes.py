@@ -14,7 +14,6 @@ import subsystems.shooter
 import math
 import subsystems.climber
 import subsystems.intake
-import subsystems.autoEndHubRB
 import typing
 
 auto_movement = wpimath.units.inchesToMeters(70)
@@ -293,34 +292,9 @@ class AutoDashboard():
         self.selected_subscriber = self.selectedtopic.subscribe("sit")
         self.current_auto = self.selected_subscriber.get() 
 
-        self.hub_table = self.nt_instance.getTable("hub")
-        self.hub_active_publish_topic = self.hub_table.getBooleanTopic("hubActive")
-        self.hub_active_publish = self.hub_active_publish_topic.publish()
-        self.hub_active_publish.set(False)
-
-        self.hub_active_word_topic = self.hub_table.getStringTopic("hubActiveString")
-        self.hub_active_word_publish = self.hub_active_word_topic.publish()
-        self.hub_active_word_publish.set("HOLD")
-
-        self.hub_timer_topic = self.hub_table.getStringTopic("hubActiveTimer")
-        self.hub_timer_publish = self.hub_timer_topic.publish()
-        self.hub_timer_publish.set("Infinite Seconds")
-
     def update(self):
         self.options_publisher.set(list(self.auto_mode_list))
         self.current_auto = self.selected_subscriber.get()
-        hubState = subsystems.autoEndHubRB.is_hub_active()
-        self.hub_active_publish.set(hubState)
-        if hubState:
-            self.hub_active_word_publish.set("FIRE")
-        else:
-            self.hub_active_word_publish.set("HOLD")
-
-        match_time = wpilib.DriverStation.getMatchTime()
-        is_auto_enabled = wpilib.DriverStation.isAutonomousEnabled()
-        seconds = subsystems.autoEndHubRB.timeremaining(match_time, is_auto_enabled)
-        secondsStr = f"{seconds:.2f} Seconds"
-        self.hub_timer_publish.set(secondsStr)
 
     def get_current_auto_builder(self, drivetrain, shooter, climber, intake: subsystems.intake.Intake) -> commands2.Command:
         if self.current_auto == AutoDashboard.AUTO_NOOB_FORWARD:
