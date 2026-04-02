@@ -16,7 +16,9 @@ class Shooter(commands2.Subsystem):
         self.secondarymotor = rev.SparkMax(can_ids.secondary_shooter, rev.SparkLowLevel.MotorType.kBrushless)
         self.secondarymotor_sim = rev.SparkSim(self.secondarymotor, wpimath.system.plant.DCMotor.NEO(1))
         self.max_speed = 6784 # Spark Neo Vortex free speed RPMs
-        self.motor_bang_bang = wpimath.controller.BangBangController()
+
+        self.motor_bang_bang_primary = wpimath.controller.BangBangController()
+        self.motor_bang_bang_secondary = wpimath.controller.BangBangController()
 
         self.ramp_motor = rev.SparkMax(can_ids.ramp, rev.SparkLowLevel.MotorType.kBrushless)
         self.ramp_motor_sim = rev.SparkSim(self.ramp_motor, wpimath.system.plant.DCMotor.NEO(1))
@@ -25,11 +27,6 @@ class Shooter(commands2.Subsystem):
 
         self.ntcore_instance = ntcore.NetworkTableInstance.getDefault()
         self.shooter_table = self.ntcore_instance.getTable("Shooter")
-
-        self.kS = 0.016
-        self.kV = 0.000135
-        self.kA = 0
-        self.motor_feedforward = wpimath.controller.SimpleMotorFeedforwardRadians(self.kS, self.kV, self.kA)
 
         # RPMs for the speed of the shooter motor. (e.g. 3000)
         self.shooter_speed = 3000
@@ -61,12 +58,13 @@ class Shooter(commands2.Subsystem):
         self.ramp_motor_speed_subscribe = self.ramp_motor_speed_topic.subscribe(self.ramp_motor_speed)
     
     # set_speed simply sets the motor speed directly.
-    def set_speed(self, speed: float):
+    def set_speed_primary(self, speed: float):
         self.motor.set(speed)
         self.motor_sim.setAppliedOutput(speed)
         self.motor_sim.setPosition(self.motor_sim.getPosition() + speed * 2)
         self.motor_sim.getAbsoluteEncoderSim().setPosition(self.motor_sim.getPosition() + speed * 2)
 
+    def set_speed_secondary(self, speed: float):
         self.secondarymotor.set(speed)
         self.secondarymotor_sim.setAppliedOutput(speed)
         self.secondarymotor_sim.setPosition(self.secondarymotor_sim.getPosition() + speed * 2)
@@ -79,14 +77,17 @@ class Shooter(commands2.Subsystem):
         return self.big_shot_subscribe.get()
 
     # set_flywheel tries to maintain speed using a BangBangController
-    def set_flywheel(self, speed: float):
+    def set_flywheel_primary(self, speed: float):
         current_speed = self.motor.getEncoder().getVelocity()
-        bangbang = self.motor_bang_bang.calculate(current_speed, speed)
+        bangbang = self.motor_bang_bang_primary.calculate(current_speed, speed)
         bangbang = bangbang * 0.5
-        #ff = self.motor_feedforward.calculate(speed)
-        #val = bangbang + 0.9 * ff
-        #self.set_speed(val)
-        self.set_speed(bangbang)
+        self.set_speed_primary(bangbang)
+
+    def set_flywheel_secondary(self, speed: float):
+        current_speed = self.secondarymotor.getEncoder().getVelocity()
+        bangbang = self.motor_bang_bang_secondary.calculate(current_speed, speed)
+        bangbang = bangbang * 0.5
+        self.set_speed_secondary(bangbang)
 
     def fire_cmd(self, speed: typing.Callable[[], float]):
         return FireCommand(self, speed)
@@ -113,7 +114,8 @@ class FireCommand(commands2.Command):
 
     def execute(self):
          # Start running the shooter motor
-        self.shooter.set_flywheel(self.speed())
+        self.shooter.set_flywheel_primary(self.speed())
+        self.shooter.set_flywheel_secondary(self.speed())
 
         # Wait until the shooter motor is up to speed before loading balls into it.
         ramp_motor_speed = self.shooter.ramp_motor_speed_subscribe.get()
@@ -123,7 +125,8 @@ class FireCommand(commands2.Command):
             self.shooter.ramp_motor.set(0)           
 
     def end(self, interrupted: bool):
-        self.shooter.set_speed(0)
+        self.shooter.set_speed_primary(0)
+        self.shooter.set_speed_secondary(0)
         self.shooter.ramp_motor.set(0)
 
 class BackwardsCommand(commands2.Command):
@@ -138,10 +141,12 @@ class BackwardsCommand(commands2.Command):
         self.shooter.ramp_motor.set(-1 * ramp_motor_speed)
         self.intake.RunRollersBackwards()
         self.intake.RunIntakeBackwards()
-        self.shooter.set_speed(-1 * self.speed)
+        self.shooter.set_speed_primary(-1 * self.speed)
+        self.shooter.set_speed_secondary(-1 * self.speed)
 
     def end(self, interrupted: bool):
-        self.shooter.set_speed(0)
+        self.shooter.set_speed_primary(0)
+        self.shooter.set_speed_secondary(0)
         self.shooter.ramp_motor.set(0)
 
 class IdleCommand(commands2.Command):
