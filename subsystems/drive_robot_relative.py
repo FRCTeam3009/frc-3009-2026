@@ -29,6 +29,7 @@ class DriveRobotRelativeCommand(commands2.Command):
                  offset: wpimath.geometry.Transform2d,
                  speed: float,
                  ):
+        #TODO update this to use pass in functions for command based system
         self.addRequirements(drive_train)
         self.drive_train = drive_train
         self.offset = offset
@@ -93,6 +94,7 @@ class DriveRobotRelativeCommand(commands2.Command):
         drive_request = lambda: ROBOT_RELATIVE.with_velocity_x(self.forward).with_velocity_y(self.horizontal).with_rotational_rate(self.rotation)
         self.drive_cmd = self.drive_train.apply_request(drive_request)
         self.drive_cmd.execute()
+        print(r)
 
     def isFinished(self):
         current_pose = self.drive_train.get_state_copy().pose

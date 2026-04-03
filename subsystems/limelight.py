@@ -121,6 +121,8 @@ class Limelight(object):
         self.should_fire_word_publish = self.should_fire_word_topic.publish()
         self.should_fire_word_publish.set("HOLD")
 
+        self.goalAngle = 0
+
     def update_command(self) -> commands2.Command:
         return commands2.cmd.run(self.update).repeatedly().ignoringDisable(True)
 
@@ -161,13 +163,13 @@ class Limelight(object):
         measurementPointY = math.sin(currentRotation)
         dotProduct = measurementPointX * xDistance + measurementPointY * yDistance
         distanceVar = dotProduct / totalDistance 
-        goalAngle = math.acos(distanceVar)
+        self.goalAngle = math.acos(distanceVar)
 
-        self.hub_angle_publish.set(goalAngle * (180 / math.pi))
+        self.hub_angle_publish.set(self.goalAngle * (180 / math.pi))
 
         # Check are we aligned
         aligned = False
-        if abs(goalAngle * (180 / math.pi)) <= 5:
+        if abs(self.goalAngle * (180 / math.pi)) <= 5:
             aligned = True
 
         self.hub_angle_aligned_publish.set(aligned)
@@ -236,6 +238,9 @@ class Limelight(object):
 
     def reset_pose_command(self, drivetrain):
         return ResetPose(self, drivetrain)
+    
+    def lock_on(self, drivetrain: subsystems.command_swerve_drivetrain.CommandSwerveDrivetrain) -> commands2.Command:
+        return subsystems.drive_robot_relative.drive_command(drivetrain, 0, subsystems.drive_robot_relative.NORMAL_SPEED, self.goalAngle)
 
 class LineupCommand(commands2.Command):
     def __init__(self, drivetrain: subsystems.command_swerve_drivetrain.CommandSwerveDrivetrain, limelight: Limelight, april_id: int):

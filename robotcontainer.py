@@ -231,6 +231,9 @@ class RobotContainer:
         (self.driver_controller.back() & self.driver_controller.b()).onTrue(
             self.front_limelight.reset_pose_command(self.drivetrain)
         )
+        self.driver_controller.leftBumper().whileTrue(
+            self.front_limelight.lock_on(self.drivetrain)
+        )
 
         def telemetry_func(state):
             return self.logger.telemeterize(state)
