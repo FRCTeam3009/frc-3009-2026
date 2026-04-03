@@ -228,13 +228,16 @@ class RobotContainer:
         (self.driver_controller.back() & self.driver_controller.start()).onTrue(
             self.drivetrain.runOnce(field_centric)
         )
+        (self.driver_controller.back() & self.driver_controller.b()).onTrue(
+            self.front_limelight.reset_pose_command(self.drivetrain)
+        )
 
         def telemetry_func(state):
             return self.logger.telemeterize(state)
         self.drivetrain.register_telemetry(telemetry_func)
         
         self.operator_controller.rightTrigger().whileTrue(
-            self.shooter.fire_cmd(self.shooter.get_shooter_speed)
+            self.shooter.fire_cmd(self.shooter.get_shooter_speed_right, self.shooter.get_shooter_speed_left)
         )
         
         self.operator_controller.leftTrigger().whileTrue(
@@ -266,7 +269,7 @@ class RobotContainer:
            self.intake.IntakeActiveCmd() 
         )
         self.operator_controller.rightBumper().whileTrue(
-            self.shooter.fire_cmd(self.shooter.get_big_shot_speed)
+            self.shooter.fire_cmd(self.shooter.get_big_shot_speed, self.shooter.get_big_shot_speed)
         )
         
     

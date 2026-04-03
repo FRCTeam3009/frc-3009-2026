@@ -247,7 +247,7 @@ def drive_to_pose(position: Pose2d) -> commands2.Command:
         )
 
 def shoot_fuel(shooter: subsystems.shooter.Shooter) -> commands2.Command:
-    return shooter.fire_cmd(shooter.get_shooter_speed)
+    return shooter.fire_cmd(shooter.get_shooter_speed_right, shooter.get_shooter_speed_left)
 
 def climb_up(climber: subsystems.climber.Climber) -> commands2.Command:
     return climber.upsies()

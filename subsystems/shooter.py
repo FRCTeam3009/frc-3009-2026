@@ -29,11 +29,17 @@ class Shooter(commands2.Subsystem):
         self.shooter_table = self.ntcore_instance.getTable("Shooter")
 
         # RPMs for the speed of the shooter motor. (e.g. 3000)
-        self.shooter_speed = 3000
+        self.shooter_speed_right = 3000
         self.motor_speed_topic = self.shooter_table.getFloatTopic("MotorSpeed")
         self.motor_speed_publish = self.motor_speed_topic.publish()
-        self.motor_speed_publish.set(self.shooter_speed)
-        self.motor_speed_subscribe = self.motor_speed_topic.subscribe(self.shooter_speed)
+        self.motor_speed_publish.set(self.shooter_speed_right)
+        self.motor_speed_subscribe = self.motor_speed_topic.subscribe(self.shooter_speed_right)
+
+        self.shooter_speed_left = 3300
+        self.motor_speed_left_topic = self.shooter_table.getFloatTopic("MotorSpeedLeft")
+        self.motor_speed_left_publish = self.motor_speed_left_topic.publish()
+        self.motor_speed_left_publish.set(self.shooter_speed_left)
+        self.motor_speed_left_subscribe = self.motor_speed_topic.subscribe(self.shooter_speed_left)
 
         self.current_motor_speed_topic = self.shooter_table.getFloatTopic("CurrentMotorSpeed")
         self.current_motor_speed_publish = self.current_motor_speed_topic.publish()
@@ -70,8 +76,11 @@ class Shooter(commands2.Subsystem):
         self.secondarymotor_sim.setPosition(self.secondarymotor_sim.getPosition() + speed * 2)
         self.secondarymotor_sim.getAbsoluteEncoderSim().setPosition(self.secondarymotor_sim.getPosition() + speed * 2)
 
-    def get_shooter_speed(self):
+    def get_shooter_speed_right(self):
         return self.motor_speed_subscribe.get()
+    
+    def get_shooter_speed_left(self):
+        return self.motor_speed_left_subscribe.get()
     
     def get_big_shot_speed(self):
         return self.big_shot_subscribe.get()
@@ -87,8 +96,8 @@ class Shooter(commands2.Subsystem):
         bangbang = self.motor_bang_bang_secondary.calculate(current_speed, speed)
         self.set_speed_secondary(bangbang*0.8)
 
-    def fire_cmd(self, speed: typing.Callable[[], float]):
-        return FireCommand(self, speed)
+    def fire_cmd(self, speedRight: typing.Callable[[], float], speedLeft: typing.Callable[[], float]):
+        return FireCommand(self, speedRight, speedLeft)
     
     def backwards_cmd(self, intake: subsystems.intake.Intake, speed: float):
         return BackwardsCommand(self, speed, intake)
@@ -96,30 +105,31 @@ class Shooter(commands2.Subsystem):
     def idle_cmd(self, intake: subsystems.intake.Intake):
         return IdleCommand(self, intake)
     
-    def up_to_speed(self, speed: float) -> bool:
-        velocity1 = self.motor.getEncoder().getVelocity()
-        velocity2 = self.secondarymotor.getEncoder().getVelocity()
+    def up_to_speed(self, speedRight: float, speedLeft: float) -> bool:
+        velocityRight = self.motor.getEncoder().getVelocity()
+        velocityLeft = self.secondarymotor.getEncoder().getVelocity()
 
-        return velocity1 > speed and velocity2 > speed
+        return velocityRight > speedRight and velocityLeft > speedLeft
     
     def telemetry(self):
         self.current_motor_speed_publish.set(self.motor.getEncoder().getVelocity())
         self.secondary_current_motor_speed_publish.set(self.secondarymotor.getEncoder().getVelocity())
 
 class FireCommand(commands2.Command):
-    def __init__(self, shooter: Shooter, speed: typing.Callable[[], float]):
+    def __init__(self, shooter: Shooter, speedRight: typing.Callable[[], float], speedLeft: typing.Callable[[], float]):
         self.addRequirements(shooter)
         self.shooter = shooter
-        self.speed = speed
+        self.speedRight = speedRight
+        self.speedLeft = speedLeft
 
     def execute(self):
          # Start running the shooter motor
-        self.shooter.set_flywheel_primary(self.speed())
-        self.shooter.set_flywheel_secondary(self.speed())
+        self.shooter.set_flywheel_primary(self.speedRight())
+        self.shooter.set_flywheel_secondary(self.speedRight())
 
         # Wait until the shooter motor is up to speed before loading balls into it.
         ramp_motor_speed = self.shooter.ramp_motor_speed_subscribe.get()
-        if self.shooter.up_to_speed(self.speed()):
+        if self.shooter.up_to_speed(self.speedRight(), self.speedLeft()):
             self.shooter.ramp_motor.set(ramp_motor_speed)
         else:
             self.shooter.ramp_motor.set(0)
