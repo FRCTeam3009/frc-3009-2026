@@ -239,11 +239,11 @@ class Limelight(object):
     def reset_pose_command(self, drivetrain):
         return ResetPose(self, drivetrain)
     
-    def speed_function(self):
-        return subsystems.drive_robot_relative.NORMAL_SPEED
+    def rotation_function(self):
+        return wpimath.geometry.Transform2d(0.0, 0.0, self.goalAngle)
     
     def lock_on(self, drivetrain: subsystems.command_swerve_drivetrain.CommandSwerveDrivetrain) -> commands2.Command:
-        return subsystems.drive_robot_relative.drive_command_with_function(drivetrain, 0, self.speed_function, self.goalAngle)
+        return subsystems.drive_robot_relative.drive_command_with_function(drivetrain, self.rotation_function, subsystems.drive_robot_relative.NORMAL_SPEED)
 
 class LineupCommand(commands2.Command):
     def __init__(self, drivetrain: subsystems.command_swerve_drivetrain.CommandSwerveDrivetrain, limelight: Limelight, april_id: int):

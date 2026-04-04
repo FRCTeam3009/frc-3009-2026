@@ -110,18 +110,18 @@ class DriveRobotRelativeCommand(commands2.Command):
 class DriveRobotRelativeCommandFunctionVersion(commands2.Command):
     def __init__(self, 
                  drive_train: subsystems.command_swerve_drivetrain.CommandSwerveDrivetrain, 
-                 offset: wpimath.geometry.Transform2d,
-                 speed: typing.Callable[[], float],
+                 pose_func: typing.Callable[[], wpimath.geometry.Transform2d],
+                 speed: float,
                  ):
         #TODO this doesn't work but doesn't crash and it has errors so idk
         self.addRequirements(drive_train)
         self.drive_train = drive_train
-        self.offset = offset
         self.speed = speed
+        self.pose_func = pose_func
 
-        self.forward = 0.0
-        self.horizontal = 0.0
-        self.rotation = 0.0
+        self.forward = wpimath.units.meters_per_second(0.0)
+        self.horizontal = wpimath.units.meters_per_second(0.0)
+        self.rotation = wpimath.units.radians_per_second(0.0)
 
         self.start_pose = wpimath.geometry.Pose2d()
         self.end_pose = wpimath.geometry.Pose2d()
@@ -129,29 +129,29 @@ class DriveRobotRelativeCommandFunctionVersion(commands2.Command):
 
     def initialize(self):
         self.start_pose = self.drive_train.get_state_copy().pose
-        self.end_pose = self.start_pose + self.offset
+        self.end_pose = self.start_pose + self.pose_func()
         
         forward = 0.0
         horizontal = 0.0
         rotation = 0.0
 
-        compare_x = self.offset.X()
-        compare_y = self.offset.Y()
-        compare_r = self.offset.rotation().degrees()
+        compare_x = self.pose_func().X()
+        compare_y = self.pose_func().Y()
+        compare_r = self.pose_func().rotation().degrees()
 
         # Determine our speed for each direction.
         if compare_x > ONE_INCH:
-            forward = self.speed()
+            forward = self.speed
         elif compare_x < -ONE_INCH:
-            forward = -1 * self.speed()
+            forward = -1 * self.speed
         if compare_y > ONE_INCH:
             horizontal = self.speed
         elif compare_y < -ONE_INCH:
-            horizontal = -1 * self.speed()
+            horizontal = -1 * self.speed
         if compare_r > TWO_DEGREES:
             rotation = self.speed
         elif compare_r < -TWO_DEGREES:
-            rotation = -1 * self.speed()
+            rotation = -1 * self.speed
 
         self.forward = forward
         self.horizontal = horizontal
@@ -200,6 +200,5 @@ def drive_sideways_command(drive_train: subsystems.command_swerve_drivetrain.Com
     pose = wpimath.geometry.Transform2d(0.0, offset, 0.0)
     return DriveRobotRelativeCommand(drive_train, pose, speed)
 
-def drive_command_with_function(drive_train: subsystems.command_swerve_drivetrain.CommandSwerveDrivetrain, offset: float, speed: typing.Callable[[], float], rotation: wpimath.units.radians):
-    pose = wpimath.geometry.Transform2d(offset, 0.0, rotation)
-    return DriveRobotRelativeCommandFunctionVersion(drive_train, pose, speed)
+def drive_command_with_function(drive_train: subsystems.command_swerve_drivetrain.CommandSwerveDrivetrain, pose_func: typing.Callable[[], wpimath.geometry.Transform2d], speed: float):
+    return DriveRobotRelativeCommandFunctionVersion(drive_train, pose_func, speed)
