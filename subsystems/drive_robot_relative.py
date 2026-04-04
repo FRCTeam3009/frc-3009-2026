@@ -114,7 +114,7 @@ class DriveRobotRelativeCommandFunctionVersion(commands2.Command):
                  speed: float,
                  ):
         #TODO this doesn't work but doesn't crash and it has errors so idk
-        self.addRequirements(drive_train)
+        #self.addRequirements(drive_train)
         self.drive_train = drive_train
         self.speed = speed
         self.pose_func = pose_func

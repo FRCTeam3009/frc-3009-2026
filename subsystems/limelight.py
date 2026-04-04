@@ -161,9 +161,13 @@ class Limelight(object):
         currentRotation = currentPose.rotation().radians()
         measurementPointX = math.cos(currentRotation)
         measurementPointY = math.sin(currentRotation)
-        dotProduct = measurementPointX * xDistance + measurementPointY * yDistance
-        distanceVar = dotProduct / totalDistance 
-        self.goalAngle = math.acos(distanceVar)
+        dotProductTop = measurementPointX * xDistance + measurementPointY * yDistance
+        dotProduct = dotProductTop / totalDistance
+        self.goalAngle = math.acos(dotProduct)
+
+        crossProduct = xDistance * measurementPointY - yDistance * measurementPointX
+        if crossProduct > 0:
+            self.goalAngle *= -1
 
         self.hub_angle_publish.set(self.goalAngle * (180 / math.pi))
 
@@ -243,7 +247,7 @@ class Limelight(object):
         return wpimath.geometry.Transform2d(0.0, 0.0, self.goalAngle)
     
     def lock_on(self, drivetrain: subsystems.command_swerve_drivetrain.CommandSwerveDrivetrain) -> commands2.Command:
-        return subsystems.drive_robot_relative.drive_command_with_function(drivetrain, self.rotation_function, subsystems.drive_robot_relative.NORMAL_SPEED)
+        return subsystems.drive_robot_relative.drive_command_with_function(drivetrain, self.rotation_function, subsystems.drive_robot_relative.TURBO_SPEED)
 
 class LineupCommand(commands2.Command):
     def __init__(self, drivetrain: subsystems.command_swerve_drivetrain.CommandSwerveDrivetrain, limelight: Limelight, april_id: int):
