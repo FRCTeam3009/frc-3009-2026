@@ -29,13 +29,13 @@ class Shooter(commands2.Subsystem):
         self.shooter_table = self.ntcore_instance.getTable("Shooter")
 
         # RPMs for the speed of the shooter motor. (e.g. 3000)
-        self.shooter_speed_right = 3300
+        self.shooter_speed_right = 3000
         self.motor_speed_topic = self.shooter_table.getFloatTopic("MotorSpeed")
         self.motor_speed_publish = self.motor_speed_topic.publish()
         self.motor_speed_publish.set(self.shooter_speed_right)
         self.motor_speed_subscribe = self.motor_speed_topic.subscribe(self.shooter_speed_right)
 
-        self.shooter_speed_left = 3000
+        self.shooter_speed_left = 2800
         self.motor_speed_left_topic = self.shooter_table.getFloatTopic("MotorSpeedLeft")
         self.motor_speed_left_publish = self.motor_speed_left_topic.publish()
         self.motor_speed_left_publish.set(self.shooter_speed_left)
@@ -89,12 +89,12 @@ class Shooter(commands2.Subsystem):
     def set_flywheel_primary(self, speed: float):
         current_speed = self.motor.getEncoder().getVelocity()
         bangbang = self.motor_bang_bang_primary.calculate(current_speed, speed)
-        self.set_speed_primary(bangbang*0.8)
+        self.set_speed_primary(bangbang*0.6)
 
     def set_flywheel_secondary(self, speed: float):
         current_speed = self.secondarymotor.getEncoder().getVelocity()
         bangbang = self.motor_bang_bang_secondary.calculate(current_speed, speed)
-        self.set_speed_secondary(bangbang*0.8)
+        self.set_speed_secondary(bangbang*0.6)
 
     def fire_cmd(self, speedRight: typing.Callable[[], float], speedLeft: typing.Callable[[], float]):
         return FireCommand(self, speedRight, speedLeft)

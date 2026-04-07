@@ -16,7 +16,7 @@ import subsystems.climber
 import subsystems.intake
 import typing
 
-auto_movement = wpimath.units.inchesToMeters(70)
+auto_movement = wpimath.units.inchesToMeters(75)
 # side_start is middle of the ramp
 side_start = wpimath.units.inchesToMeters(60)
 speed_auto = 0.50
@@ -142,8 +142,8 @@ def move_shoot_center(
     transform = sp.transformBy(wpimath.geometry.Transform2d(-auto_movement, 0, 0))
     cmds = commands2.SequentialCommandGroup()
     cmds.addCommands(drive_to_pose(transform))
-    cmds.addCommands(intake.InNOutCmd())
     cmds.addCommands(intake.StartBoolCmd())
+    cmds.addCommands(intake.InNOutCmd())
     cmds.addCommands(shoot_fuel(shooter).withTimeout(10.0))
     return cmds
 
