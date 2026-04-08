@@ -20,7 +20,7 @@ HUB_BLUE_POS = wpimath.geometry.Pose2d(
     wpimath.units.inchesToMeters(182.11), 
     wpimath.units.inchesToMeters(158.84), 
     0)
-TARGET_DISTANCE = wpimath.units.inchesToMeters(140)
+TARGET_DISTANCE = wpimath.units.inchesToMeters(120)
 
 class Limelight(object):
     def __init__(self, name: str, drive_train: subsystems.command_swerve_drivetrain.CommandSwerveDrivetrain):
