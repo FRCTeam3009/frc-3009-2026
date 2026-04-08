@@ -65,7 +65,6 @@ class MoveClimberCommand(commands2.Command):
         self.addRequirements(self.climber)
 
     def execute(self):
-        self.climber.climber_speed = self.climber.climber_speed
         self.climber.climber_movement(self.speed * self.climber.climber_speed)
 
     '''def isFinished(self) -> bool:
@@ -117,7 +116,6 @@ class UpsiesCommand(commands2.Command):
         self.limit = self.climber.auto_limit
 
     def execute(self):
-        self.climber.climber_speed = self.climber.climber_speed
         self.climber.climber_movement(-1 * self.climber.climber_speed)
 
     def isFinished(self) -> bool:
@@ -139,7 +137,6 @@ class Hold(commands2.Command):
 
     def execute(self):
         if self.climber.climber_motor.get_position().value_as_double < (self.pos - 5):
-            self.climber.climber_speed = self.climber.climber_speed
             self.climber.climber_movement(self.climber.climber_speed * 0.5)
         if self.climber.climber_motor.get_position().value_as_double >= self.pos:
             self.climber.climber_movement(0)

@@ -18,11 +18,11 @@ class Intake(commands2.Subsystem):
         # States: -1 = default, 0 = retracting, 1 = deploying
         self.deploying = -1
 
-        intake_motor_speed = -1
+        self.intake_motor_speed = -1
 
-        rollers_motor_speed = -0.4
+        self.rollers_motor_speed = -0.4
 
-        timer_time = 0.5
+        self.timer_time = 0.5
 
         self.ntcore_instance = ntcore.NetworkTableInstance.getDefault()
         self.nttable = self.ntcore_instance.getTable("Intake")
@@ -105,7 +105,7 @@ class InNOutCommand(commands2.Command):
 
     def isFinished(self) -> bool:
         self.UpdateStates()
-        wait_time = self.timer.hasElapsed(0.5)
+        wait_time = self.timer.hasElapsed(self.intake.timer_time)
         if self.horizontal_state == self.forward and self.vertical_state == self.backward and wait_time:
             # If we're in-between states and enough time has passed, then finish the movement.
             if self.intake.deploying == 1:
