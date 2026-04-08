@@ -154,18 +154,15 @@ def move_shoot_right(
         intake: subsystems.intake.Intake
     ) -> commands2.Command:
 
-    side = 1.0
     move = auto_movement * math.cos(rot_auto)
-    if should_mirror():
-        side = -1.0
 
-    sp = start_pose(drivetrain, -1 * side * side_start)
-    transform = sp.transformBy(wpimath.geometry.Transform2d(-move, 0, rot_auto * side))
+    sp = start_pose(drivetrain, -1 * side_start)
+    transform = sp.transformBy(wpimath.geometry.Transform2d(-move, 0, rot_auto))
 
     cmds = commands2.SequentialCommandGroup()
     cmds.addCommands(drive_to_pose(transform))
-    cmds.addCommands(intake.InNOutCmd())
     cmds.addCommands(intake.StartBoolCmd())
+    cmds.addCommands(intake.InNOutCmd())
     cmds.addCommands(shoot_fuel(shooter).withTimeout(5.0))
     return cmds
 
@@ -176,18 +173,15 @@ def move_shoot_left(
         intake: subsystems.intake.Intake
     ) -> commands2.Command:
 
-    side = 1.0
     move = auto_movement * math.cos(rot_auto)
-    if should_mirror():
-        side = -1.0
 
-    sp = start_pose(drivetrain, side * side_start)
-    transform = sp.transformBy(wpimath.geometry.Transform2d(-move, 0, -rot_auto * side))
+    sp = start_pose(drivetrain, side_start)
+    transform = sp.transformBy(wpimath.geometry.Transform2d(-move, 0, -1 * rot_auto))
 
     cmds = commands2.SequentialCommandGroup()
     cmds.addCommands(drive_to_pose(transform))
-    cmds.addCommands(intake.InNOutCmd())
     cmds.addCommands(intake.StartBoolCmd())
+    cmds.addCommands(intake.InNOutCmd())
     cmds.addCommands(shoot_fuel(shooter).withTimeout(5.0))
     return cmds
 

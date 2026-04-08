@@ -90,6 +90,8 @@ class MyRobot(commands2.TimedCommandRobot):
         self.disabled_periodic_timer.reset()
         self.disabled_periodic_timer.start()
 
+        self.container.disable()
+
     def disabledPeriodic(self) -> None:
         """This function is called periodically when disabled"""
         self.disabled_periodic_publish.set(self.disabled_periodic_timer.get())
