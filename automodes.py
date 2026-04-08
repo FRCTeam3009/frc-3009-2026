@@ -161,8 +161,8 @@ def move_shoot_right(
 
     cmds = commands2.SequentialCommandGroup()
     cmds.addCommands(drive_to_pose(transform))
-    cmds.addCommands(intake.InNOutCmd())
     cmds.addCommands(intake.StartBoolCmd())
+    cmds.addCommands(intake.InNOutCmd())
     cmds.addCommands(shoot_fuel(shooter).withTimeout(5.0))
     return cmds
 
@@ -180,8 +180,8 @@ def move_shoot_left(
 
     cmds = commands2.SequentialCommandGroup()
     cmds.addCommands(drive_to_pose(transform))
-    cmds.addCommands(intake.InNOutCmd())
     cmds.addCommands(intake.StartBoolCmd())
+    cmds.addCommands(intake.InNOutCmd())
     cmds.addCommands(shoot_fuel(shooter).withTimeout(5.0))
     return cmds
 

@@ -291,4 +291,7 @@ class RobotContainer:
         self.intake.telemtry()
         self.shooter.telemetry()
 
+    def disable(self):
+        self.intake.StopBoolCmd().ignoringDisable(True).schedule()
+
         

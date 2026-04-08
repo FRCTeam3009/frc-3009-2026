@@ -74,6 +74,9 @@ class Intake(commands2.Subsystem):
     def StartBoolCmd(self) -> StartBool:
         return StartBool(self)
     
+    def StopBoolCmd(self) -> StopBool:
+        return StopBool(self)
+    
     def IntakeActiveCmd(self) -> IntakeActive:
         return IntakeActive(self)
     
@@ -166,6 +169,16 @@ class StartBool(commands2.Command):
 
     def execute(self):
         self.intake.is_running = True
+
+    def isFinished(self) -> bool:
+        return True
+    
+class StopBool(commands2.Command):
+    def __init__(self, intake: Intake):
+        self.intake = intake
+
+    def execute(self):
+        self.intake.is_running = False
 
     def isFinished(self) -> bool:
         return True
