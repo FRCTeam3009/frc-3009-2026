@@ -16,7 +16,7 @@ import subsystems.climber
 import subsystems.intake
 import typing
 
-auto_movement = wpimath.units.inchesToMeters(75)
+auto_movement = wpimath.units.inchesToMeters(71)
 # side_start is middle of the ramp
 side_start = wpimath.units.inchesToMeters(60)
 speed_auto = 0.50

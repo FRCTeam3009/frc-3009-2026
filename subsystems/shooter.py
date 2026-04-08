@@ -29,17 +29,17 @@ class Shooter(commands2.Subsystem):
         self.shooter_table = self.ntcore_instance.getTable("Shooter")
 
         # RPMs for the speed of the shooter motor. (e.g. 3000)
-        self.shooter_speed_right = 3000
+        self.shooter_speed_right = 3300
         self.motor_speed_topic = self.shooter_table.getFloatTopic("MotorSpeed")
         self.motor_speed_publish = self.motor_speed_topic.publish()
         self.motor_speed_publish.set(self.shooter_speed_right)
         self.motor_speed_subscribe = self.motor_speed_topic.subscribe(self.shooter_speed_right)
 
-        self.shooter_speed_left = 2800
+        self.shooter_speed_left = 3100
         self.motor_speed_left_topic = self.shooter_table.getFloatTopic("MotorSpeedLeft")
         self.motor_speed_left_publish = self.motor_speed_left_topic.publish()
         self.motor_speed_left_publish.set(self.shooter_speed_left)
-        self.motor_speed_left_subscribe = self.motor_speed_topic.subscribe(self.shooter_speed_left)
+        self.motor_speed_left_subscribe = self.motor_speed_left_topic.subscribe(self.shooter_speed_left)
 
         self.current_motor_speed_topic = self.shooter_table.getFloatTopic("CurrentMotorSpeed")
         self.current_motor_speed_publish = self.current_motor_speed_topic.publish()
@@ -125,7 +125,7 @@ class FireCommand(commands2.Command):
     def execute(self):
          # Start running the shooter motor
         self.shooter.set_flywheel_primary(self.speedRight())
-        self.shooter.set_flywheel_secondary(self.speedRight())
+        self.shooter.set_flywheel_secondary(self.speedLeft())
 
         # Wait until the shooter motor is up to speed before loading balls into it.
         ramp_motor_speed = self.shooter.ramp_motor_speed_subscribe.get()
