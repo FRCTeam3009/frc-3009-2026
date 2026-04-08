@@ -23,13 +23,6 @@ class Climber(commands2.Subsystem):
         self.lower_limit = -100
         self.auto_limit = 50
 
-        self.ntcore_instance = ntcore.NetworkTableInstance.getDefault()
-        self.climber_table = self.ntcore_instance.getTable("Climber")
-        self.climber_topic = self.climber_table.getFloatTopic("MotorSpeed")
-        self.motor_speed_publish = self.climber_topic.publish()
-        self.motor_speed_publish.set(self.climber_speed)
-        self.motor_speed_subscribe = self.climber_topic.subscribe(self.climber_speed)
-
     def climber_movement(self, speed: float):
         self.climber_motor.set(speed)
 
@@ -72,7 +65,7 @@ class MoveClimberCommand(commands2.Command):
         self.addRequirements(self.climber)
 
     def execute(self):
-        self.climber.climber_speed = self.climber.motor_speed_subscribe.get()
+        self.climber.climber_speed = self.climber.climber_speed
         self.climber.climber_movement(self.speed * self.climber.climber_speed)
 
     '''def isFinished(self) -> bool:
@@ -124,7 +117,7 @@ class UpsiesCommand(commands2.Command):
         self.limit = self.climber.auto_limit
 
     def execute(self):
-        self.climber.climber_speed = self.climber.motor_speed_subscribe.get()
+        self.climber.climber_speed = self.climber.climber_speed
         self.climber.climber_movement(-1 * self.climber.climber_speed)
 
     def isFinished(self) -> bool:
@@ -146,7 +139,7 @@ class Hold(commands2.Command):
 
     def execute(self):
         if self.climber.climber_motor.get_position().value_as_double < (self.pos - 5):
-            self.climber.climber_speed = self.climber.motor_speed_subscribe.get()
+            self.climber.climber_speed = self.climber.climber_speed
             self.climber.climber_movement(self.climber.climber_speed * 0.5)
         if self.climber.climber_motor.get_position().value_as_double >= self.pos:
             self.climber.climber_movement(0)

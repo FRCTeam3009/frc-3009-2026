@@ -26,26 +26,9 @@ class Intake(commands2.Subsystem):
 
         self.ntcore_instance = ntcore.NetworkTableInstance.getDefault()
         self.nttable = self.ntcore_instance.getTable("Intake")
-        self.motor_speed_topic = self.nttable.getFloatTopic("MotorSpeed")
-        self.motor_speed_publish = self.motor_speed_topic.publish()
-        self.motor_speed_publish.set(intake_motor_speed)
-        self.motor_speed_subscribe = self.motor_speed_topic.subscribe(intake_motor_speed)
-
-        self.ntcore_instance = ntcore.NetworkTableInstance.getDefault()
-        self.nttable = self.ntcore_instance.getTable("Intake")
-        self.rollers_speed_topic = self.nttable.getFloatTopic("RollerSpeed")
-        self.rollers_speed_publish = self.rollers_speed_topic.publish()
-        self.rollers_speed_publish.set(rollers_motor_speed)
-        self.rollers_speed_subscribe = self.rollers_speed_topic.subscribe(rollers_motor_speed)
-
-        self.timer_topic = self.nttable.getFloatTopic("Timer")
-        self.timer_publish = self.timer_topic.publish()
-        self.timer_publish.set(timer_time)
-        self.timer_subscribe = self.timer_topic.subscribe(timer_time)
 
         self.is_running = False
 
-        
         self.roller_topic = self.nttable.getBooleanTopic("Rollers")
         self.roller_publish = self.roller_topic.publish()
         self.roller_publish.set(self.is_running)
@@ -87,10 +70,10 @@ class Intake(commands2.Subsystem):
         self.rollers.set(speed)
 
     def RunRollersBackwards(self):
-        self.rollers.set(self.rollers_speed_subscribe.get() * -1)
+        self.rollers.set(self.rollers_motor_speed * -1)
     
     def RunIntakeBackwards(self):
-        self.IntakeMotor.set(-1 * self.motor_speed_subscribe.get())
+        self.IntakeMotor.set(-1 * self.intake_motor_speed)
 
 class InNOutCommand(commands2.Command):
     def __init__(self, intake: Intake):
@@ -122,7 +105,7 @@ class InNOutCommand(commands2.Command):
 
     def isFinished(self) -> bool:
         self.UpdateStates()
-        wait_time = self.timer.hasElapsed(self.intake.timer_subscribe.get())
+        wait_time = self.timer.hasElapsed(0.5)
         if self.horizontal_state == self.forward and self.vertical_state == self.backward and wait_time:
             # If we're in-between states and enough time has passed, then finish the movement.
             if self.intake.deploying == 1:
@@ -150,7 +133,7 @@ class IntakeCommand(commands2.Command):
     def execute(self):
         self.timer_rollers.start()
         if self.intake.is_running:
-            self.intake.IntakeMotor.set(self.intake.motor_speed_subscribe.get())
+            self.intake.IntakeMotor.set(self.intake.intake_motor_speed)
             if math.floor(self.timer_rollers.get() * 3) % 2 == 0:
                 self.intake.RunRollers(-0.25)
             else:
