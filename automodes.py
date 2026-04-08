@@ -141,10 +141,12 @@ def move_shoot_center(
     sp = start_pose(drivetrain, 0)
     transform = sp.transformBy(wpimath.geometry.Transform2d(-auto_movement, 0, 0))
     cmds = commands2.SequentialCommandGroup()
-    cmds.addCommands(drive_to_pose(transform))
     cmds.addCommands(intake.StartBoolCmd())
-    cmds.addCommands(intake.InNOutCmd())
-    cmds.addCommands(shoot_fuel(shooter).withTimeout(10.0))
+    cmds.addCommands(drive_to_pose(transform))
+    cmds.addCommands(intake.InNOutCmd().andThen(intake.IntakeActiveCmd()))
+    cmds.addCommands(shoot_fuel(shooter).alongWith(intake.IntakeCmd()).withTimeout(10.0))
+    cmds.addCommands(intake.IntakeActiveCmd())
+
     return cmds
 
 # This auto does not use the limelights.
@@ -160,10 +162,12 @@ def move_shoot_right(
     transform = sp.transformBy(wpimath.geometry.Transform2d(-move, 0, rot_auto))
 
     cmds = commands2.SequentialCommandGroup()
-    cmds.addCommands(drive_to_pose(transform))
     cmds.addCommands(intake.StartBoolCmd())
+    cmds.addCommands(drive_to_pose(transform))
     cmds.addCommands(intake.InNOutCmd())
-    cmds.addCommands(shoot_fuel(shooter).withTimeout(5.0))
+    cmds.addCommands(intake.IntakeActiveCmd())
+    cmds.addCommands(shoot_fuel(shooter).alongWith(intake.IntakeCmd()).withTimeout(10.0))
+    cmds.addCommands(intake.IntakeActiveCmd())
     return cmds
 
 # This auto does not use the limelights.
@@ -179,10 +183,12 @@ def move_shoot_left(
     transform = sp.transformBy(wpimath.geometry.Transform2d(-move, 0, -1 * rot_auto))
 
     cmds = commands2.SequentialCommandGroup()
-    cmds.addCommands(drive_to_pose(transform))
     cmds.addCommands(intake.StartBoolCmd())
+    cmds.addCommands(drive_to_pose(transform))
     cmds.addCommands(intake.InNOutCmd())
-    cmds.addCommands(shoot_fuel(shooter).withTimeout(5.0))
+    cmds.addCommands(intake.IntakeActiveCmd())
+    cmds.addCommands(shoot_fuel(shooter).alongWith(intake.IntakeCmd()).withTimeout(10.0))
+    cmds.addCommands(intake.IntakeActiveCmd())
     return cmds
 
 def blue_climb_right(
