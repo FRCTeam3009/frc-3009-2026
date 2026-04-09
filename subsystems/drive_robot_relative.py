@@ -20,7 +20,7 @@ ROBOT_RELATIVE = (
         )
 
 TURBO_SPEED = 1.0
-NORMAL_SPEED = 0.5
+NORMAL_SPEED = 0.35
 SLOW_SPEED = 0.25
 
 class DriveRobotRelativeCommand(commands2.Command):
