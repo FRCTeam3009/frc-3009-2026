@@ -85,7 +85,6 @@ class UpperLatchCommand(commands2.Command):
         self.upper_latch = self.climber.arms
 
     def execute(self):
-        print(self.upper_latch.get())
         self.climber.upper_latch_toggle()
 
     def isFinished(self) -> bool:
