@@ -95,6 +95,7 @@ class RobotContainer:
         
         self.climber = subsystems.climber.Climber()
         commands2.CommandScheduler.getInstance().registerSubsystem(self.climber)
+        self.climber.setDefaultCommand(self.climber.HoldCmd())
 
         # Configure the button bindings
         self.configure_button_bindings()

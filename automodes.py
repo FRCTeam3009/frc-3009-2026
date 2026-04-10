@@ -19,6 +19,7 @@ import typing
 auto_movement = wpimath.units.inchesToMeters(71)
 # side_start is middle of the ramp
 side_start = wpimath.units.inchesToMeters(60)
+center_side_start = wpimath.units.inchesToMeters(5.62)
 speed_auto = 0.50
 climber_offset = 0.2032
 
@@ -69,6 +70,7 @@ def get_default_start_pose() -> Pose2d:
 # We'll assign positions based on the Blue side.
 # If we're on the Red side, we can use mirror_position() to flip.
 def should_mirror() -> bool:
+    return False
     return wpilib.DriverStation.getAlliance() != wpilib.DriverStation.Alliance.kBlue
 
 def mirror_position(input: Pose2d) -> Pose2d:
@@ -96,6 +98,13 @@ def get_rotation() -> float:
     return math.asin(side_start / back)
 
 rot_auto = get_rotation()
+
+def get_rotation_climb() -> float:
+    # Recenter the triangle to the center of the hub rather than the robot start pose.
+    back = auto_movement + wpimath.units.inchesToMeters(38)
+    return math.asin(center_side_start / back)
+
+rot_auto_climb = get_rotation_climb()
 
 # start_pose is used for the auto modes that don't use the limelights.
 # This gives us an estimate starting position.
@@ -239,6 +248,40 @@ def red_climb_right(
     cmds.addCommands(climb_up(climber))
     return cmds
 
+def climb_left(
+        shooter: subsystems.shooter.Shooter,
+        drivetrain: subsystems.command_swerve_drivetrain.CommandSwerveDrivetrain,
+        intake: subsystems.intake.Intake,
+        climber: subsystems.climber.Climber
+    ) -> commands2.Command:
+
+    move = auto_movement * math.cos(rot_auto_climb)
+
+    sp = start_pose(drivetrain, center_side_start)
+    transform = sp.transformBy(wpimath.geometry.Transform2d(-move, 0, -1 * rot_auto_climb))
+
+    cmds = commands2.SequentialCommandGroup()
+    cmds.addCommands(intake.StartBoolCmd())
+    cmds.addCommands(drive_to_pose(transform))
+    cmds.addCommands(intake.InNOutCmd())
+    cmds.addCommands(shoot_fuel(shooter).alongWith(intake.IntakeCmd()).withTimeout(7.0))
+    cmds.addCommands(intake.InNOutCmd())
+    cmds.addCommands(climb_set_up_auto(climber).withTimeout(2.0))
+    transform = transform.transformBy(wpimath.geometry.Transform2d(-1 * wpimath.units.inchesToMeters(9.55), 0, rot_auto_climb))
+    cmds.addCommands(drive_to_pose(transform).alongWith(climber.UpperLatchCmd()))
+    cmds.addCommands(climb_up(climber))
+    return cmds
+
+def climb_test(
+        climber: subsystems.climber.Climber
+    ) -> commands2.Command:
+
+    cmds = commands2.SequentialCommandGroup()
+    cmds.addCommands(climb_set_up_auto(climber).withTimeout(2.0))
+    cmds.addCommands(climber.UpperLatchCmd())
+    cmds.addCommands(climb_up(climber))
+    return cmds
+
 def drive_to_pose(position: Pose2d) -> commands2.Command:
     return pathplannerlib.auto.AutoBuilder.pathfindToPose(
             position,
@@ -255,6 +298,9 @@ def climb_up(climber: subsystems.climber.Climber) -> commands2.Command:
 def climb_set_up(climber: subsystems.climber.Climber) -> commands2.Command:
     return climber.move_cmd(climber.climber_speed)
 
+def climb_set_up_auto(climber:subsystems.climber.Climber) -> commands2.Command:
+    return climber.move_cmd(climber.climber_speed_auto)
+
 class AutoDashboard():
     AUTO_SIT = "sit"
     AUTO_NOOB_FORWARD = "noob_forward"
@@ -265,6 +311,8 @@ class AutoDashboard():
     AUTO_CLIMB_LEFT_BLUE = "climb_left_blue"
     AUTO_CLIMB_RIGHT_RED = "climb_right_red"
     AUTO_CLIMB_LEFT_RED = "climb_left_red"
+    AUTO_CLIMB_LEFT = "climb_left"
+    AUTO_TEST_CLIMB = "test_climb"
 
     # Dropdown menu selection list
     auto_mode_list = [
@@ -273,6 +321,8 @@ class AutoDashboard():
         AUTO_MOVE_SHOOT_CENTER,
         AUTO_MOVE_SHOOT_LEFT,
         AUTO_MOVE_SHOOT_RIGHT,
+        AUTO_CLIMB_LEFT,
+        AUTO_TEST_CLIMB
         # AUTO_CLIMB_RIGHT_BLUE,
         # AUTO_CLIMB_LEFT_BLUE,
         # AUTO_CLIMB_RIGHT_RED,
@@ -313,6 +363,10 @@ class AutoDashboard():
             return red_climb_right(climber)
         elif self.current_auto == AutoDashboard.AUTO_CLIMB_LEFT_RED:
             return red_climb_left(climber)
+        elif self.current_auto == AutoDashboard.AUTO_CLIMB_LEFT:
+            return climb_left(shooter, drivetrain, intake, climber)
+        elif self.current_auto == AutoDashboard.AUTO_TEST_CLIMB:
+            return climb_test(climber)
         else:
             return sit()
 

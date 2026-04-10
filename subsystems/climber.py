@@ -18,10 +18,12 @@ class Climber(commands2.Subsystem):
         # self.stabilizer.set(wpilib.DoubleSolenoid.Value.kReverse)
 
         self.climber_speed = 0.5
+        self.climber_speed_auto = -0.5
 
-        self.upper_limit = 0
-        self.lower_limit = -100
-        self.auto_limit = 50
+        #self.upper_limit = -55.92
+        self.upper_limit = -50.0
+        #self.lower_limit = 0
+        self.lower_limit = 5
 
     def climber_movement(self, speed: float):
         self.climber_motor.set(speed)
@@ -54,8 +56,8 @@ class Climber(commands2.Subsystem):
     def LowerLatchCmd(self) -> LowerLatchCommand:
         return LowerLatchCommand(self)
     
-    # def StabilizerCmd(self) -> StabilizerCommand:
-    #    return StabilizerCommand(self)
+    def HoldCmd(self) -> Hold:
+        return Hold(self)
 
 class MoveClimberCommand(commands2.Command):
     def __init__(self, climber: Climber, speed: float):
@@ -67,11 +69,11 @@ class MoveClimberCommand(commands2.Command):
     def execute(self):
         self.climber.climber_movement(self.speed * self.climber.climber_speed)
 
-    '''def isFinished(self) -> bool:
-        if self.climber.get_position() >= self.upper_limit and self.speed > 0:
+    def isFinished(self) -> bool:
+        if self.climber.get_position() <= self.upper_limit and self.speed < 0:
             return True
         else:
-            return False'''
+            return False
 
     def end(self, interrupted: bool):
         self.climber.climber_movement(0)
@@ -99,27 +101,18 @@ class LowerLatchCommand(commands2.Command):
 
     def isFinished(self) -> bool:
         return True
-    
-# class StabilizerCommand(commands2.Command):
-    # def __init__(self, climber: Climber):
-        # self.climber = climber
-
-    # def execute(self):
-        # self.climber.stabilizer.toggle()
-
-    # def isFinished(self) -> bool:
-        # return True
 
 class UpsiesCommand(commands2.Command):
     def __init__(self, climber: Climber):
+        self.addRequirements(climber)
         self.climber = climber
-        self.limit = self.climber.auto_limit
+        self.limit = self.climber.lower_limit
 
     def execute(self):
-        self.climber.climber_movement(-1 * self.climber.climber_speed)
+        self.climber.climber_movement(self.climber.climber_speed)
 
     def isFinished(self) -> bool:
-        if self.climber.get_position() <= self.limit:
+        if self.climber.get_position() >= self.limit:
             return True
         else:
             return False
@@ -129,14 +122,14 @@ class UpsiesCommand(commands2.Command):
 
 class Hold(commands2.Command):
     def __init__(self, climber: Climber):
+        self.addRequirements(climber)
         self.climber = climber
-        self.limit = self.climber.auto_limit
 
     def initialize(self):
         self.pos = self.climber.get_position()
 
     def execute(self):
-        if self.climber.climber_motor.get_position().value_as_double < (self.pos - 5):
+        if self.climber.climber_motor.get_position().value_as_double < (self.pos - 2):
             self.climber.climber_movement(self.climber.climber_speed * 0.5)
         if self.climber.climber_motor.get_position().value_as_double >= self.pos:
             self.climber.climber_movement(0)
