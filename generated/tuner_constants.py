@@ -33,7 +33,7 @@ class TunerConstants:
     # output type specified by SwerveModuleConstants.DriveMotorClosedLoopOutput
     _drive_gains = (
         configs.Slot0Configs()
-        .with_k_p(0.1)
+        .with_k_p(0.075)
         .with_k_i(0)
         .with_k_d(0)
         .with_k_s(0)
@@ -212,7 +212,7 @@ class TunerConstants:
         _back_left_encoder_offset,
         _back_left_x_pos,
         _back_left_y_pos,
-        True,
+        _invert_left_side,
         _back_left_steer_motor_inverted,
         _back_left_encoder_inverted,
     )

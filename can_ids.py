@@ -16,10 +16,10 @@ encoders_back_right = 30
 
 # Copy these directly from CTRE "Absolute Position No Offset"
 # (They are already negated where they are used, so just copy-paste)
-encoder_offsets_front_left = -0.479248
-encoder_offsets_front_right = 0.391357
-encoder_offsets_back_left = 0.399658
-encoder_offsets_back_right = 0.495605
+encoder_offsets_front_left = -0.469482
+encoder_offsets_front_right = 0.385254
+encoder_offsets_back_left = -0.091309
+encoder_offsets_back_right = 0.494873
 
 shooter = 21 # spark flex
 secondary_shooter = 22 # spark flex
