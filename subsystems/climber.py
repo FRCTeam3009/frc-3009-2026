@@ -20,10 +20,8 @@ class Climber(commands2.Subsystem):
         self.climber_speed = 0.5
         self.climber_speed_auto = -0.5
 
-        #self.upper_limit = -55.92
-        self.upper_limit = -50.0
-        #self.lower_limit = 0
-        self.lower_limit = 5
+        self.upper_limit = -55.92
+        self.lower_limit = 10
 
     def climber_movement(self, speed: float):
         self.climber_motor.set(speed)

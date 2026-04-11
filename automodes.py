@@ -263,19 +263,21 @@ def climb_left(
     cmds.addCommands(intake.StartBoolCmd())
     cmds.addCommands(drive_to_pose(transform))
     cmds.addCommands(intake.InNOutCmd())
-    cmds.addCommands(shoot_fuel(shooter).alongWith(intake.IntakeCmd()).withTimeout(1.0))
-    cmds.addCommands(intake.InNOutCmd())
+    cmds.addCommands(shoot_fuel(shooter).alongWith(intake.IntakeCmd()).withTimeout(7.0))
+    cmds.addCommands(intake.InNOutCmd().alongWith(climber.UpperLatchCmd()))
     cmds.addCommands(climb_set_up_auto(climber).withTimeout(2.0))
-    cmds.addCommands(subsystems.drive_robot_relative.drive_command(drivetrain, -1 * wpimath.units.inchesToMeters(9.0), subsystems.drive_robot_relative.NORMAL_SPEED, rot_auto_climb).alongWith(climber.UpperLatchCmd()))
+    cmds.addCommands(subsystems.drive_robot_relative.drive_command(drivetrain, -1 * wpimath.units.inchesToMeters(9.0), 0.25, rot_auto_climb))
     cmds.addCommands(climb_up(climber))
     return cmds
 
 def climb_test(
-        climber: subsystems.climber.Climber
+        climber: subsystems.climber.Climber,
+        drivetrain: subsystems.command_swerve_drivetrain.CommandSwerveDrivetrain
     ) -> commands2.Command:
 
     cmds = commands2.SequentialCommandGroup()
     cmds.addCommands(climb_set_up_auto(climber).withTimeout(2.0))
+    cmds.addCommands(subsystems.drive_robot_relative.drive_command(drivetrain, -1 * wpimath.units.inchesToMeters(9.0), 0.25, rot_auto_climb))
     cmds.addCommands(climber.UpperLatchCmd())
     cmds.addCommands(climb_up(climber))
     return cmds
@@ -364,7 +366,7 @@ class AutoDashboard():
         elif self.current_auto == AutoDashboard.AUTO_CLIMB_LEFT:
             return climb_left(shooter, drivetrain, intake, climber)
         elif self.current_auto == AutoDashboard.AUTO_TEST_CLIMB:
-            return climb_test(climber)
+            return climb_test(climber, drivetrain)
         else:
             return sit()
 
