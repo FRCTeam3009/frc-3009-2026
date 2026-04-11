@@ -282,6 +282,24 @@ def climb_test(
     cmds.addCommands(climb_up(climber))
     return cmds
 
+def move_shoot_center_outpost(
+        shooter: subsystems.shooter.Shooter,
+        drivetrain: subsystems.command_swerve_drivetrain.CommandSwerveDrivetrain,
+        intake: subsystems.intake.Intake
+    ) -> commands2.Command:
+    sp = start_pose(drivetrain, 0)
+    transform = sp.transformBy(wpimath.geometry.Transform2d(-auto_movement, 0, 0))
+    cmds = commands2.SequentialCommandGroup()
+    cmds.addCommands(intake.StartBoolCmd())
+    cmds.addCommands(drive_to_pose(transform))
+    cmds.addCommands(intake.InNOutCmd())
+    cmds.addCommands(shoot_fuel(shooter).alongWith(intake.IntakeCmd()).withTimeout(7.0))
+    cmds.addCommands(subsystems.drive_robot_relative.drive_sideways_command(drivetrain, wpimath.units.inchesToMeters(75.93), 1))
+    cmds.addCommands(subsystems.drive_robot_relative.drive_command(drivetrain, 0, 1, wpimath.units.degreesToRadians(180)))
+    cmds.addCommands(subsystems.drive_robot_relative.drive_command(drivetrain, wpimath.units.inchesToMeters(50), 0.5, 0))
+
+    return cmds
+
 def drive_to_pose(position: Pose2d) -> commands2.Command:
     return pathplannerlib.auto.AutoBuilder.pathfindToPose(
             position,
@@ -313,6 +331,7 @@ class AutoDashboard():
     AUTO_CLIMB_LEFT_RED = "climb_left_red"
     AUTO_CLIMB_LEFT = "climb_left"
     AUTO_TEST_CLIMB = "test_climb"
+    AUTO_CENTER_OUTPOST = "center_outpost"
 
     # Dropdown menu selection list
     auto_mode_list = [
@@ -322,7 +341,8 @@ class AutoDashboard():
         AUTO_MOVE_SHOOT_LEFT,
         AUTO_MOVE_SHOOT_RIGHT,
         AUTO_CLIMB_LEFT,
-        AUTO_TEST_CLIMB
+        AUTO_TEST_CLIMB,
+        AUTO_CENTER_OUTPOST
         # AUTO_CLIMB_RIGHT_BLUE,
         # AUTO_CLIMB_LEFT_BLUE,
         # AUTO_CLIMB_RIGHT_RED,
@@ -367,6 +387,8 @@ class AutoDashboard():
             return climb_left(shooter, drivetrain, intake, climber)
         elif self.current_auto == AutoDashboard.AUTO_TEST_CLIMB:
             return climb_test(climber, drivetrain)
+        elif self.current_auto == AutoDashboard.AUTO_CENTER_OUTPOST:
+            return move_shoot_center_outpost(shooter, drivetrain, intake)
         else:
             return sit()
 
