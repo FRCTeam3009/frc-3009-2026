@@ -263,11 +263,10 @@ def climb_left(
     cmds.addCommands(intake.StartBoolCmd())
     cmds.addCommands(drive_to_pose(transform))
     cmds.addCommands(intake.InNOutCmd())
-    cmds.addCommands(shoot_fuel(shooter).alongWith(intake.IntakeCmd()).withTimeout(7.0))
+    cmds.addCommands(shoot_fuel(shooter).alongWith(intake.IntakeCmd()).withTimeout(1.0))
     cmds.addCommands(intake.InNOutCmd())
     cmds.addCommands(climb_set_up_auto(climber).withTimeout(2.0))
-    transform = transform.transformBy(wpimath.geometry.Transform2d(-1 * wpimath.units.inchesToMeters(9.55), 0, rot_auto_climb))
-    cmds.addCommands(drive_to_pose(transform).alongWith(climber.UpperLatchCmd()))
+    cmds.addCommands(subsystems.drive_robot_relative.drive_command(drivetrain, -1 * wpimath.units.inchesToMeters(9.0), subsystems.drive_robot_relative.NORMAL_SPEED, rot_auto_climb).alongWith(climber.UpperLatchCmd()))
     cmds.addCommands(climb_up(climber))
     return cmds
 
